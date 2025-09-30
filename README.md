@@ -14,6 +14,7 @@ This project simulates the core features of YouTube including **video upload, pl
 
 ---
 
+```bash
 ## 📂 Project Structure
 WeTubeApp/
 │
@@ -63,7 +64,7 @@ frontend/
 
 ├── node-service/ # NodeJS service (realtime chat, notifications)
 └── README.md
-
+```
 ---
 
 ## ⚙️ Installation & Setup
