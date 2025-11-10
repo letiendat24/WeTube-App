@@ -24,16 +24,16 @@ export default function Header() {
           size="icon"
           className="rounded-full hover:bg-[#f2f2f2] text-[#0f0f0f] h-10 w-10"
         >
-          <Menu className="h-5 w-5" />
+          <Menu className="w-5 h-5" />
         </Button>
         <div className="flex items-center gap-1 cursor-pointer select-none">
-          <img src="/youtube-logo.svg" alt="YouTube" className="h-5" />
+          {/* <img src="/youtube-logo.svg" alt="YouTube" className="h-5" /> */}
           <span className="text-xl font-semibold tracking-tight">YouTube</span>
         </div>
       </div>
 
       {/* CENTER: search bar */}
-      <div className="flex flex-1 max-w-xl items-center justify-center px-4">
+      <div className="flex items-center justify-center flex-1 max-w-xl px-4">
         <div className="flex w-full max-w-[600px]">
           <Input
             type="text"
@@ -85,7 +85,7 @@ export default function Header() {
             <DropdownMenuLabel className="px-4 py-2 text-sm font-semibold border-b border-[#e5e5e5]">
               Thông báo
             </DropdownMenuLabel>
-            <div className="max-h-60 overflow-y-auto">
+            <div className="overflow-y-auto max-h-60">
               {[1, 2, 3].map((i) => (
                 <DropdownMenuItem
                   key={i}
