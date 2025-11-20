@@ -11,8 +11,8 @@
 // //       <div className="flex">
 // //         {/* SIDEBAR (cố định bên trái, nằm dưới header) */}
 // //         <aside
-// //           className="fixed top-[56px] left-0 w-[72px] h-[calc(100vh-56px)] 
-// //           bg-[var(--surface)] border-r border-[var(--border-color)] overflow-y-auto 
+// //           className="fixed top-[56px] left-0 w-[72px] h-[calc(100vh-56px)]
+// //           bg-[var(--surface)] border-r border-[var(--border-color)] overflow-y-auto
 // //           flex flex-col items-center py-3"
 // //         >
 // //           <SideBar />
@@ -20,7 +20,7 @@
 
 // //         {/* MAIN CONTENT */}
 // //         <main
-// //           className="flex-1 ml-[72px] mt-[56px] p-6 
+// //           className="flex-1 ml-[72px] mt-[56px] p-6
 // //           bg-[var(--background)] text-[var(--text-primary)]"
 // //         >
 // //           <Outlet />
@@ -31,7 +31,7 @@
 // // }
 // import { Outlet } from "react-router"
 // import Header from "@/components/Header"
-// import SideBar from "@/components/SideBar" 
+// import SideBar from "@/components/SideBar"
 
 // export default function DefaultLayout() {
 //   return (
@@ -42,8 +42,8 @@
 //       <div className="flex">
 //         {/* SIDEBAR */}
 //         <aside
-//           className="fixed top-[56px] left-0 w-[72px] h-[calc(100vh-56px)] 
-//                      bg-background border-r border-border overflow-y-auto 
+//           className="fixed top-[56px] left-0 w-[72px] h-[calc(100vh-56px)]
+//                      bg-background border-r border-border overflow-y-auto
 //                      flex flex-col items-center py-3"
 //         >
 //           {/* Component Sidebar (chứa menu) được đặt bên trong */}
@@ -52,7 +52,7 @@
 
 //         {/* MAIN CONTENT */}
 //         <main
-//           className="flex-1 ml-[72px] mt-[56px] p-6 
+//           className="flex-1 ml-[72px] mt-[56px] p-6
 //                      bg-background text-foreground"
 //         >
 //           <Outlet />
@@ -77,10 +77,9 @@ export default function DefaultLayout() {
         {/* SIDEBAR */}
         <aside
           className="fixed top-[56px] left-0 h-[calc(100vh-56px)] 
-                     bg-background border-r border-border overflow-y-auto 
-                     
+                     bg-background  border-border overflow-y-auto 
                      w-60" // SỬA: Tăng độ rộng từ w-[72px] lên w-60 (240px)
-                     // XÓA: 'flex', 'items-center' (Sidebar.jsx tự xử lý)
+          // XÓA: 'flex', 'items-center' (Sidebar.jsx tự xử lý)
         >
           <SideBar />
         </aside>

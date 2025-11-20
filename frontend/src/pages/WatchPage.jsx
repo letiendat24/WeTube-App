@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router"; 
+import { useParams } from "react-router";
 import {
   ThumbsUp,
   ThumbsDown,
@@ -14,57 +14,65 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 
 function WatchingPage() {
-  const { videoId } = useParams();
+  const API_KEY = "AIzaSyA_dcjfpUea9NFtvsIzfQ0I6B52P-7aNsk";
 
+    const { videoId } = useParams();
   const [videoData, setVideoData] = useState(null);
-  const [comments, setComments] = useState([]);
+
   useEffect(() => {
-    const fetchVideoDetails = async () => {
+    const fetchVideoDetail = async () => {
       try {
         const res = await fetch(
-          `http://localhost:3001/videos/${videoId}`
+          `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${videoId}&key=${API_KEY}`
         );
         const data = await res.json();
-
-        setVideoData(data);
-        setComments(data.comments || []);
-      } catch (error) {
-        console.error("Error fetching video details:", error);
+        setVideoData(data.items[0]);
+      } catch (err) {
+        console.error("Lỗi tải video:", err);
       }
     };
 
-    fetchVideoDetails();
+    fetchVideoDetail();
   }, [videoId]);
 
-  if (!videoData) {
-    return <div>Đang tải video...</div>;
-  }
+  if (!videoData) return <p>Đang tải video...</p>;
+
+  const { snippet, statistics } = videoData;
+
 
   return (
     <>
       {/* Video Player */}
-      <div className="w-full overflow-hidden rounded-xl aspect-video bg-black">
-        <video
+      <div className="w-full overflow-hidden bg-black rounded-xl aspect-video">
+        {/* <video
           src={videoData.videoUrl}
           controls
           autoPlay 
           className="w-full h-full"
-        />
+        /> */}
+        <iframe
+          width="100%"
+          height="100%"
+          src={`https://www.youtube.com/embed/${videoId}`}
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen
+        ></iframe>
       </div>
 
       {/* Video Title */}
-      <h1 className="text-lg font-semibold md:text-xl">{videoData.title}</h1>
+      <h1 className="text-lg font-semibold md:text-xl">{snippet.title}</h1>
 
       {/* Video Info + Actions */}
       <div className="flex flex-col justify-between pb-3 border-b sm:flex-row sm:items-center border-border">
         {/* Channel Info */}
         <div className="flex items-center gap-3">
           <Avatar className="w-10 h-10">
-            <AvatarImage src={videoData.avatar} />
+            <AvatarImage src={snippet.thumbnails.default} />
             <AvatarFallback>CX</AvatarFallback>
           </Avatar>
           <div>
-            <p className="font-semibold">{videoData.channel}</p>
+            <p className="font-semibold">{snippet.channelTitle}</p>
             <p className="text-xs text-muted-foreground">
               {videoData.subscribers} người đăng ký
             </p>
@@ -94,9 +102,9 @@ function WatchingPage() {
       {/* Description */}
       <Card className="border-0 bg-secondary rounded-xl">
         <CardContent className="p-4 text-sm text-foreground">
-          <p>{videoData.description}</p>
+          <p>{snippet.description}</p>
           <p className="mt-2 text-xs text-muted-foreground">
-            {videoData.views} lượt xem • {videoData.uploaded}
+            {statistics.viewCount} lượt xem • {videoData.uploaded}
           </p>
         </CardContent>
       </Card>
@@ -104,7 +112,7 @@ function WatchingPage() {
       {/* Comment Section */}
       <div>
         <h2 className="mb-3 text-lg font-semibold">
-          {comments.length} Bình luận
+          {statistics.commentCount} Bình luận
         </h2>
         {/* Comment Input */}
         <div className="flex items-center gap-2 mb-4">
@@ -125,7 +133,7 @@ function WatchingPage() {
         </div>
 
         {/* Comment List */}
-        <div className="space-y-3">
+        {/* <div className="space-y-3">
           {comments.map((cmt, index) => (
             <div key={index} className="flex gap-3">
               <Avatar>
@@ -138,7 +146,7 @@ function WatchingPage() {
               </div>
             </div>
           ))}
-        </div>
+        </div> */}
       </div>
     </>
   );

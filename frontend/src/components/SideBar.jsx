@@ -54,7 +54,7 @@
 // src/components/Sidebar.jsx
 
 import { useEffect, useState } from "react";
-import { NavLink } from "react-router"; // Import từ "react-router-dom"
+import { NavLink } from "react-router"; 
 import {
   Home,
   PlaySquare,
@@ -68,12 +68,11 @@ import {
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"; // Cần Avatar
 
-// === CÁC MỤC MENU MỚI ===
 
 // Phần 1: Menu chính
 const mainMenuItems = [
   { icon: Home, label: "Trang chủ", to: "/" },
-  { icon: PlaySquare, label: "Kênh đăng ký", to: "/subscriptions" },
+  { icon: PlaySquare, label: "Kênh đăng ký", to: "/subscribed" },
   { icon: Flame, label: "Thịnh hành", to: "/trending" },
 ];
 
@@ -84,7 +83,7 @@ const youMenuItems = [
   { icon: ListVideo, label: "Danh sách phát", to: "/playlists" },
 ];
 
-// Hàm render NavLink chuẩn (dùng cho 2 menu trên)
+// Hàm render NavLink 
 const renderNavLink = ({ icon: Icon, label, to }) => (
   <NavLink
     key={label}
@@ -94,8 +93,8 @@ const renderNavLink = ({ icon: Icon, label, to }) => (
       cn(
         "flex flex-row items-center gap-4 w-full px-4 py-2 text-sm font-medium rounded-lg transition-colors",
         isActive
-          ? "text-primary bg-secondary" // Style khi active
-          : "text-muted-foreground hover:bg-secondary" // Style khi không active
+          ? "text-foreground font-semibold bg-secondary" // Style khi active
+          : "text-foreground hover:bg-secondary" // Style khi không active
       )
     }
   >
@@ -143,7 +142,6 @@ export default function Sidebar() {
   }, []);
 
   return (
-    // Sửa: Bỏ <aside> và chỉ dùng <nav>
     <nav className="flex flex-col w-full gap-1 p-2">
       {/* PHẦN 1: MENU CHÍNH */}
       <div className="flex flex-col gap-1">
@@ -171,8 +169,8 @@ export default function Sidebar() {
               cn(
                 "flex flex-row items-center gap-4 w-full px-4 py-2 text-sm font-medium rounded-lg transition-colors",
                 isActive
-                  ? "text-primary bg-secondary"
-                  : "text-muted-foreground hover:bg-secondary"
+                  ? "text-foreground font-semibold bg-secondary"
+                  : "text-foreground hover:bg-secondary"
               )
             }
           >
