@@ -1,5 +1,5 @@
 import axios from "axios";
-const API_KEY = "AIzaSyA_dcjfpUea9NFtvsIzfQ0I6B52P-7aNsk"
+const API_KEY = import.meta.env.VITE_KEY_API;
 
 const BASE_URL = "https://www.googleapis.com/youtube/v3";
 

@@ -2,83 +2,67 @@
 import { useCallback, useEffect, useState } from "react";
 import VideoCard from "../../components/VideoCard";
 import { VideoGridSkeleton } from "../../components/VideoSkeleton";
-import axios from "axios";
-import { fetchHomeVideos } from "@/api/youtube";
 import useInfiniteScroll from "@/hooks/useInfinityScroll";
-// import { useEffect, useState } from "react";
+import videoApi from "@/api/videoApi";
+
 
 function Home() {
-  // const API_KEY = "AIzaSyA_dcjfpUea9NFtvsIzfQ0I6B52P-7aNsk";
   const [videos, setVideos] = useState([]);
-  const [nextPageToken, setNextPageToken] = useState("");
+  const [page, setPage] = useState(1); // Backend dùng page (số), không dùng token
+  const [hasMore, setHasMore] = useState(true); // Kiểm tra còn dữ liệu để load không
   const [isLoadingAPI, setIsLoadingAPI] = useState(false);
-    const [showSkeleton, setShowSkeleton] = useState(false);
+  const [showSkeleton, setShowSkeleton] = useState(false);
+  
+  // Reset state khi component mount
+  useEffect(() => {
+    setVideos([]);
+    setPage(1);
+    setHasMore(true);
+    // Gọi loadMore ngay lần đầu tiên
+    loadMore(1); 
+  }, []);
 
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     try {
-  //       setIsLoading(true);
-  //       const res = await axios.get(
-  //         `https://www.googleapis.com/youtube/v3/videos`,
-  //         {
-  //           params: {
-  //           part: "snippet,statistics",
-  //           chart: "mostPopular",
-  //           maxResults: 10,
-  //           regionCode: "VN",
-  //           key: API_KEY,
-  //         },
-  //         }
-  //       );
-  //       // if (!res.ok) throw new Error("Can not download videos");
-  //       console.log(res.data.items)
-  //       console.log(res.data.items.snippet)
-  //       setVideos(res.data.items);
-  //     } catch (err) {
-  //       console.error(err);
-  //     } finally {
-  //       setIsLoading(false);
-  //     }
-  //   };
-
-  //   fetchData();
-  // }, []);
-
-   const loadMore = useCallback(async () => {
-    if (isLoadingAPI) return;
+  const loadMore = useCallback(async (currentPage = page) => {
+    // Nếu đang load hoặc hết dữ liệu thì dừng
+    if (isLoadingAPI || !hasMore) return;
 
     setIsLoadingAPI(true);
     setShowSkeleton(true);
 
-    const MIN_DELAY = 500; // skeleton tối thiểu 500ms
+    const MIN_DELAY = 500; // Giữ nguyên hiệu ứng skeleton mượt mà
     const startTime = Date.now();
 
-    const data = await fetchHomeVideos(nextPageToken);
+    try {
+      // Gọi API từ Backend của bạn
+      const data = await videoApi.getAll({
+        page: currentPage,
+        limit: 12, // Load 12 video mỗi lần cho đẹp grid
+        sort: 'latest'
+      });
 
-    const elapsed = Date.now() - startTime;
-    if (elapsed < MIN_DELAY) {
-      await new Promise(res => setTimeout(res, MIN_DELAY - elapsed));
+      const elapsed = Date.now() - startTime;
+      if (elapsed < MIN_DELAY) {
+        await new Promise((res) => setTimeout(res, MIN_DELAY - elapsed));
+      }
+
+      if (data.length === 0) {
+        setHasMore(false); // Hết video để load
+      } else {
+        setVideos((prev) => [...prev, ...data]);
+        setPage((prev) => prev + 1); // Tăng số trang lên cho lần load sau
+      }
+
+    } catch (error) {
+      console.error("Failed to fetch videos:", error);
+    } finally {
+      setIsLoadingAPI(false);
+      // Delay nhẹ để skeleton biến mất mượt
+      setTimeout(() => setShowSkeleton(false), 100);
     }
+  }, [page, hasMore, isLoadingAPI]);
 
-    setVideos(prev => [...prev, ...data.items]);
-    setNextPageToken(data.nextPageToken || "");
-    setIsLoadingAPI(false);
-
-    // delay 100ms nữa để skeleton mượt biến mất
-    setTimeout(() => setShowSkeleton(false), 100);
-  }, [nextPageToken, isLoadingAPI]);
-
-  // Load lần đầu
-  useEffect(() => {
-    loadMore();
-  }, []);
-
-  // Infinity scroll
-  useInfiniteScroll(loadMore);
-
-  // if (isLoading) {
-  //   return <VideoGridSkeleton />;
-  // }
+  // Hook Infinity Scroll (kích hoạt khi cuộn xuống đáy)
+  useInfiniteScroll(() => loadMore(page));
   return (
     <>
       <div className="grid grid-cols-1 p-4 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-x-4 gap-y-8">
