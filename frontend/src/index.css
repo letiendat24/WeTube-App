@@ -30,7 +30,6 @@
   }
 
   .dark {
-    /* 🎬 YouTube Dark Theme Colors (Giữ nguyên từ file của bạn) */
     --background: 0 0% 6%;           /* #0f0f0f */
     --foreground: 0 0% 95%;           /* #f1f1f1 */
     --card: 0 0% 9%;                 /* #181818 */
@@ -84,7 +83,3 @@
   background-color: hsl(0 0% 10%);
 }
 
-/* Link hover */
-a {
-  @apply text-primary hover:underline;
-}

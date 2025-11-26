@@ -313,7 +313,7 @@
 //         {/* LEFT: Video + Info + Comments */}
 //         <div className="w-full md:w-[70%] lg:w-[72%] space-y-4">
 //           {/* Video Player */}
-//           <div className="w-full overflow-hidden rounded-xl aspect-video bg-black">
+//           <div className="w-full overflow-hidden bg-black rounded-xl aspect-video">
 //             <video
 //               src="https://www.w3schools.com/html/mov_bbb.mp4"
 //               controls
@@ -447,7 +447,7 @@
 //           {videos.map((video) => (
 //             <Card
 //               key={video.id}
-//               className="flex gap-3 bg-transparent border-0 transition cursor-pointer hover:bg-secondary p-2 rounded-lg"
+//               className="flex gap-3 p-2 transition bg-transparent border-0 rounded-lg cursor-pointer hover:bg-secondary"
 //             >
 //               <img
 //                 src={video.thumbnail}
@@ -507,9 +507,9 @@ function WatchingLayout() {
           {videos.map((video) => (
             <Card
               key={video.id}
-              className=" bg-transparent border-0 transition cursor-pointer hover:bg-secondary p-2 rounded-lg"
+              className="p-2 transition bg-transparent border-0 rounded-lg cursor-pointer  hover:bg-secondary"
             >
-              <div className="flex gap-3 justify-baseline items-start">
+              <div className="flex items-start gap-3 justify-baseline">
                 <img
                   src={video.thumbnail}
                   alt={video.title}
