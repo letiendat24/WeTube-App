@@ -14,7 +14,7 @@ const channelApi = {
 
   // Lấy danh sách đã subscribe (để check trạng thái)
   getMySubscriptions: () => {
-    return axiosClient.get('/subscriptions');
+    return axiosClient.get('/channels/my-subscriptions');
   }
 };
 

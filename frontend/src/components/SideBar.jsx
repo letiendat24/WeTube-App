@@ -1,5 +1,3 @@
-
-
 // import { NavLink } from "react-router"
 // import { Home, Clapperboard, PlaySquare, User } from "lucide-react"
 // import { cn } from "@/lib/utils"
@@ -9,7 +7,7 @@
 //   { icon: Clapperboard, label: "Shorts", to: "/shorts" },
 //   { icon: PlaySquare, label: "Kênh đăng ký", to: "/subscriptions" },
 //   { icon: User, label: "Bạn", to: "/you" },
-  
+
 // ]
 
 // export default function Sidebar({ className }) {
@@ -54,7 +52,7 @@
 // src/components/Sidebar.jsx
 
 import { useEffect, useState } from "react";
-import { NavLink } from "react-router"; 
+import { NavLink } from "react-router";
 import {
   Home,
   PlaySquare,
@@ -67,7 +65,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"; // Cần Avatar
-
+import channelApi from "@/api/channelApi";
 
 // Phần 1: Menu chính
 const mainMenuItems = [
@@ -83,7 +81,7 @@ const youMenuItems = [
   { icon: ListVideo, label: "Danh sách phát", to: "/playlists" },
 ];
 
-// Hàm render NavLink 
+// Hàm render NavLink
 const renderNavLink = ({ icon: Icon, label, to }) => (
   <NavLink
     key={label}
@@ -114,26 +112,11 @@ export default function Sidebar() {
   useEffect(() => {
     const fetchChannels = async () => {
       try {
-        // 1. Tải tất cả video
-        const res = await fetch("http://localhost:3001/videos");
-        const videos = await res.json();
-
-        // 2. Tạo danh sách các kênh duy nhất từ video
-        const channelsMap = new Map();
-        videos.forEach((video) => {
-          if (!channelsMap.has(video.channelId)) {
-            channelsMap.set(video.channelId, {
-              id: video.channelId,
-              name: video.channel,
-              // Tạo avatar giả từ chữ cái đầu
-              avatar: `https://via.placeholder.com/24.png?text=${video.channel[0]}`,
-            });
-          }
-        });
-        
-        // 3. Cập nhật state (chỉ lấy 5 kênh đầu tiên làm ví dụ)
-        setSubscriptions(Array.from(channelsMap.values()).slice(0, 5));
-
+        const res = await channelApi.getMySubscriptions();
+        const channels = res.data;
+        console.log(channels);
+        console.log(res);
+        setSubscriptions(channels);
       } catch (error) {
         console.error("Lỗi tải kênh:", error);
       }
@@ -159,12 +142,14 @@ export default function Sidebar() {
       <hr className="my-2 border-border" />
 
       {/* PHẦN 3: KÊNH ĐĂNG KÝ */}
-      <h3 className="px-4 py-2 text-sm font-semibold text-foreground">Kênh đăng ký</h3>
+      <h3 className="px-4 py-2 text-sm font-semibold text-foreground">
+        Kênh đăng ký
+      </h3>
       <div className="flex flex-col gap-1">
         {subscriptions.map((channel) => (
           <NavLink
-            key={channel.id}
-            to={`/channel/${channel.id}`}
+            key={channel._id}
+            to={`/channel/${channel._id}`}
             className={({ isActive }) =>
               cn(
                 "flex flex-row items-center gap-4 w-full px-4 py-2 text-sm font-medium rounded-lg transition-colors",
@@ -176,13 +161,17 @@ export default function Sidebar() {
           >
             <Avatar className="w-6 h-6">
               <AvatarImage src={channel.avatar} />
-              <AvatarFallback>{channel.name[0]}</AvatarFallback>
+              <AvatarFallback>{channel.channelName[0]}</AvatarFallback>
             </Avatar>
-            <span className="truncate">{channel.name}</span>
+            <span className="truncate">{channel.channelName}</span>
           </NavLink>
         ))}
         {/* Link "Tất cả kênh" */}
-        {renderNavLink({ icon: List, label: "Tất cả kênh", to: "/subscriptions/all" })}
+        {renderNavLink({
+          icon: List,
+          label: "Tất cả kênh",
+          to: "/subscriptions/all",
+        })}
       </div>
     </nav>
   );
