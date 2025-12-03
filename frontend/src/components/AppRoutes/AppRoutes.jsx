@@ -15,6 +15,7 @@ import StudioLayout from "@/layouts/StudioLayout";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import { useAuth } from "@/context/AuthContext";
+import TestPage from "@/pages/TestPage";
 
 function AppRoutes() {
   // Component bảo vệ route (Chỉ cho phép truy cập nếu đã login)
@@ -41,6 +42,7 @@ function AppRoutes() {
         <Route element={<DefaultLayout />}>
           <Route index element={<Home />} />
           <Route path="/subscribed" element={<SubscribedPage />} />
+          <Route path="/test" element={<TestPage />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/trending" element={<TrendingPage />} />
           <Route path="/history" element={<HistoryPage />} />

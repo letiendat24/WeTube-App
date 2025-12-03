@@ -100,7 +100,7 @@
 //           poster={videoData.thumbnailUrl} // Thumbnail hiển thị trước khi play
 //           controls
 //           autoPlay
-//           className="w-full h-full object-contain"
+//           className="object-contain w-full h-full"
 //         />
 //         {/* Nếu muốn dùng iframe youtube cũ thì giữ lại đoạn này, nhưng backend của bạn trả về file mp4 nên dùng thẻ video */}
 //       </div>
@@ -111,10 +111,10 @@
 //       </div>
 
 //       {/* Video Info + Actions */}
-//       <div className="flex flex-col justify-between py-3 border-b sm:flex-row sm:items-start border-border gap-4">
+//       <div className="flex flex-col justify-between gap-4 py-3 border-b sm:flex-row sm:items-start border-border">
 
 //         {/* Channel Info */}
-//         <div className="flex items-center gap-3 w-full sm:w-auto">
+//         <div className="flex items-center w-full gap-3 sm:w-auto">
 //           <Link to={`/channel/${channel._id}`}>
 //             <Avatar className="w-10 h-10 cursor-pointer">
 //                 <AvatarImage src={channel.avatarUrl} />
@@ -123,7 +123,7 @@
 //           </Link>
 //           <div className="flex flex-col">
 //             <Link to={`/channel/${channel._id}`}>
-//                 <p className="font-semibold text-sm hover:text-foreground cursor-pointer">
+//                 <p className="text-sm font-semibold cursor-pointer hover:text-foreground">
 //                     {channel.channelName}
 //                 </p>
 //             </Link>
@@ -145,12 +145,12 @@
 //         </div>
 
 //         {/* Action Buttons */}
-//         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 sm:pb-0">
-//           <div className="flex items-center bg-secondary rounded-full h-9">
+//         <div className="flex items-center gap-2 pb-1 overflow-x-auto no-scrollbar sm:pb-0">
+//           <div className="flex items-center rounded-full bg-secondary h-9">
 //             <Button
 //                 variant="ghost"
 //                 size="sm"
-//                 className="rounded-l-full h-full px-3 hover:bg-secondary-foreground/10 border-r border-secondary-foreground/20 gap-2"
+//                 className="h-full gap-2 px-3 border-r rounded-l-full hover:bg-secondary-foreground/10 border-secondary-foreground/20"
 //                 onClick={handleLike}
 //             >
 //               <ThumbsUp className="w-4 h-4" />
@@ -159,13 +159,13 @@
 //             <Button
 //                 variant="ghost"
 //                 size="sm"
-//                 className="rounded-r-full h-full px-3 hover:bg-secondary-foreground/10"
+//                 className="h-full px-3 rounded-r-full hover:bg-secondary-foreground/10"
 //             >
 //               <ThumbsDown className="w-4 h-4" />
 //             </Button>
 //           </div>
 
-//           <Button variant="secondary" size="sm" className="rounded-full h-9 px-3 gap-2">
+//           <Button variant="secondary" size="sm" className="gap-2 px-3 rounded-full h-9">
 //             <Share2 className="w-4 h-4" /> Chia sẻ
 //           </Button>
 
@@ -177,23 +177,23 @@
 
 //       {/* Description */}
 //       <div className="mt-4">
-//         <Card className="border-0 bg-secondary/50 rounded-xl hover:bg-secondary/70 transition-colors cursor-pointer">
+//         <Card className="transition-colors border-0 cursor-pointer bg-secondary/50 rounded-xl hover:bg-secondary/70">
 //             <CardContent className="p-3 text-sm text-foreground">
-//             <div className="flex gap-2 font-medium mb-1">
+//             <div className="flex gap-2 mb-1 font-medium">
 //                 <span>{videoData.stats?.views?.toLocaleString()} lượt xem</span>
 //                 <span>•</span>
 //                 <span>{formatDateTime(videoData.createdAt)}</span>
 //             </div>
 
-//             <p className="whitespace-pre-wrap leading-relaxed text-sm">
+//             <p className="text-sm leading-relaxed whitespace-pre-wrap">
 //                 {videoData.description || "Không có mô tả cho video này."}
 //             </p>
 
 //             {/* Tags */}
 //             {videoData.tags && videoData.tags.length > 0 && (
-//                 <div className="mt-3 flex flex-wrap gap-1">
+//                 <div className="flex flex-wrap gap-1 mt-3">
 //                     {videoData.tags.map((tag, i) => (
-//                         <span key={i} className="text-blue-500 text-xs hover:underline">#{tag}</span>
+//                         <span key={i} className="text-xs text-blue-500 hover:underline">#{tag}</span>
 //                     ))}
 //                 </div>
 //             )}
@@ -216,14 +216,14 @@
 //             <AvatarImage src={currentUser?.avatarUrl} />
 //             <AvatarFallback><User className="w-5 h-5" /></AvatarFallback>
 //           </Avatar>
-//           <div className="flex flex-1 flex-col gap-2">
+//           <div className="flex flex-col flex-1 gap-2">
 //             <Input
 //               placeholder="Viết bình luận..."
-//               className="bg-transparent border-0 border-b border-muted-foreground/30 rounded-none px-0 py-1 focus-visible:ring-0 focus-visible:border-foreground transition-colors placeholder:text-sm"
+//               className="px-0 py-1 transition-colors bg-transparent border-0 border-b rounded-none border-muted-foreground/30 focus-visible:ring-0 focus-visible:border-foreground placeholder:text-sm"
 //             />
 //             <div className="flex justify-end gap-2 mt-1">
 //                  <Button variant="ghost" size="sm" className="rounded-full">Hủy</Button>
-//                  <Button size="sm" className="rounded-full bg-blue-600 hover:bg-blue-700 text-white disabled:bg-secondary disabled:text-muted-foreground">
+//                  <Button size="sm" className="text-white bg-blue-600 rounded-full hover:bg-blue-700 disabled:bg-secondary disabled:text-muted-foreground">
 //                     Bình luận
 //                 </Button>
 //             </div>
@@ -231,7 +231,7 @@
 //         </div>
 
 //         {/* Comment List Placeholder */}
-//         <div className="text-center py-10 text-muted-foreground text-sm">
+//         <div className="py-10 text-sm text-center text-muted-foreground">
 //             Tính năng bình luận đang được phát triển...
 //         </div>
 //       </div>
@@ -260,6 +260,7 @@ import { formatDateTime } from "@/utils/formatDateTime";
 import videoApi from "@/api/videoApi";
 import channelApi from "@/api/channelApi";
 import { useAuth } from "@/context/AuthContext";
+import CommentSection from "@/components/CommentSection";
 
 function WatchPage() {
   const { videoId } = useParams();
@@ -401,9 +402,9 @@ function WatchPage() {
   // Nếu videoData vẫn null sau khi load xong -> Hiển thị lỗi
   if (!videoData)
     return (
-      <div className="flex flex-col items-center justify-center p-10 text-center space-y-4">
+      <div className="flex flex-col items-center justify-center p-10 space-y-4 text-center">
         <p className="text-xl font-semibold">Video không tồn tại.</p>
-        <p className="text-muted-foreground text-sm">
+        <p className="text-sm text-muted-foreground">
           Đường dẫn có thể bị sai hoặc video đã bị xóa.
         </p>
         <Link to="/">
@@ -430,13 +431,13 @@ function WatchPage() {
   return (
     <>
       {/* Video Player */}
-      <div className="w-full overflow-hidden bg-black rounded-xl aspect-video relative group">
+      <div className="relative w-full overflow-hidden bg-black rounded-xl aspect-video group">
         <video
           src={videoData.videoUrl}
           poster={videoData.thumbnailUrl}
           controls
           autoPlay
-          className="w-full h-full object-contain"
+          className="object-contain w-full h-full"
         />
       </div>
 
@@ -448,9 +449,9 @@ function WatchPage() {
       </div>
 
       {/* Info & Actions */}
-      <div className="flex flex-col justify-between py-3 border-b sm:flex-row sm:items-start border-border gap-4">
+      <div className="flex flex-col justify-between gap-4 py-3 border-b sm:flex-row sm:items-start border-border">
         {/* Channel Info */}
-        <div className="flex items-center gap-3 w-full sm:w-auto">
+        <div className="flex items-center w-full gap-3 sm:w-auto">
           <Link to={`/channel/${channel._id}`}>
             <Avatar className="w-10 h-10 cursor-pointer">
               <AvatarImage src={channel.avatarUrl} />
@@ -461,7 +462,7 @@ function WatchPage() {
           </Link>
           <div className="flex flex-col">
             <Link to={`/channel/${channel._id}`}>
-              <p className="font-semibold text-sm hover:text-foreground cursor-pointer">
+              <p className="text-sm font-semibold cursor-pointer hover:text-foreground">
                 {channel.channelName || "Unknown Channel"}
               </p>
             </Link>
@@ -486,8 +487,8 @@ function WatchPage() {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 sm:pb-0">
-          <div className="flex items-center bg-secondary rounded-full h-9">
+        <div className="flex items-center gap-2 pb-1 overflow-x-auto no-scrollbar sm:pb-0">
+          <div className="flex items-center rounded-full bg-secondary h-9">
             {/* Nút Like */}
             <Button
               variant="ghost"
@@ -509,7 +510,7 @@ function WatchPage() {
             <Button
               variant="ghost"
               size="sm"
-              className="rounded-r-full h-full px-3 hover:bg-secondary-foreground/10"
+              className="h-full px-3 rounded-r-full hover:bg-secondary-foreground/10"
             >
               <ThumbsDown className="w-4 h-4" />
             </Button>
@@ -518,7 +519,7 @@ function WatchPage() {
           <Button
             variant="secondary"
             size="sm"
-            className="rounded-full h-9 px-3 gap-2"
+            className="gap-2 px-3 rounded-full h-9"
           >
             <Share2 className="w-4 h-4" /> Chia sẻ
           </Button>
@@ -535,9 +536,9 @@ function WatchPage() {
 
       {/* Description */}
       <div className="mt-4">
-        <Card className="border-0 bg-secondary/50 rounded-xl hover:bg-secondary/70 transition-colors cursor-pointer">
+        <Card className="transition-colors border-0 cursor-pointer bg-secondary/50 rounded-xl hover:bg-secondary/70">
           <CardContent className="p-3 text-sm text-foreground">
-            <div className="flex gap-2 font-medium mb-1">
+            <div className="flex gap-2 mb-1 font-medium">
               {/* Sử dụng ?. ở đây để tránh lỗi undefined */}
               <span>
                 {videoData.stats?.views?.toLocaleString() || 0} lượt xem
@@ -546,16 +547,16 @@ function WatchPage() {
               <span>{formatDateTime(videoData.createdAt)}</span>
             </div>
 
-            <p className="whitespace-pre-wrap leading-relaxed text-sm">
+            <p className="text-sm leading-relaxed whitespace-pre-wrap">
               {videoData.description || "Không có mô tả cho video này."}
             </p>
 
             {videoData.tags && videoData.tags.length > 0 && (
-              <div className="mt-3 flex flex-wrap gap-1">
+              <div className="flex flex-wrap gap-1 mt-3">
                 {videoData.tags.map((tag, i) => (
                   <span
                     key={i}
-                    className="text-blue-500 text-xs hover:underline"
+                    className="text-xs text-blue-500 hover:underline"
                   >
                     #{tag}
                   </span>
@@ -567,7 +568,7 @@ function WatchPage() {
       </div>
 
       {/* Comment Section */}
-      <div className="mt-6">
+      {/* <div className="mt-6">
         <div className="flex items-center gap-8 mb-4">
           <h2 className="text-lg font-bold">
             {videoData.stats?.comments || 0} Bình luận
@@ -581,10 +582,10 @@ function WatchPage() {
               <User className="w-5 h-5" />
             </AvatarFallback>
           </Avatar>
-          <div className="flex flex-1 flex-col gap-2">
+          <div className="flex flex-col flex-1 gap-2">
             <Input
               placeholder="Viết bình luận..."
-              className="bg-transparent border-0 border-b border-muted-foreground/30 rounded-none px-0 py-1 focus-visible:ring-0 focus-visible:border-foreground transition-colors placeholder:text-sm"
+              className="px-0 py-1 transition-colors bg-transparent border-0 border-b rounded-none border-muted-foreground/30 focus-visible:ring-0 focus-visible:border-foreground placeholder:text-sm"
             />
             <div className="flex justify-end gap-2 mt-1">
               <Button variant="ghost" size="sm" className="rounded-full">
@@ -592,14 +593,15 @@ function WatchPage() {
               </Button>
               <Button
                 size="sm"
-                className="rounded-full bg-blue-600 hover:bg-blue-700 text-white disabled:bg-secondary disabled:text-muted-foreground"
+                className="text-white bg-blue-600 rounded-full hover:bg-blue-700 disabled:bg-secondary disabled:text-muted-foreground"
               >
                 Bình luận
               </Button>
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
+      <CommentSection videoId={videoId}/>
     </>
   );
 }
