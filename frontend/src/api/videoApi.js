@@ -21,8 +21,12 @@ const videoApi = {
     return axiosClient.post(`/videos/${id}/like`);
   },
 
-  // Dislike (hoặc Un-like)
-  removeLike: (id) => {
+  // Dislike video
+  dislike: (id) => {
+    return axiosClient.post(`/videos/${id}/dislike`);
+  },
+ // Hủy tương tác (Xóa Like hoặc Dislike)
+  removeInteraction: (id) => {
     return axiosClient.delete(`/videos/${id}/like`);
   },
 
@@ -30,6 +34,15 @@ const videoApi = {
   getLikedVideos: () => {
     return axiosClient.get("/videos/liked");
   },
+
+  //lay danh sach video da xem
+  getHistoryVideos: () => {
+    return axiosClient.get("/history");
+  },
+  // Update video
+  updateVideo: (id, data) => {
+    return axiosClient.patch(`/videos/${id}`, data);
+  }
 };
 
 export default videoApi;
