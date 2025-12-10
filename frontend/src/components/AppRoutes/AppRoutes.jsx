@@ -1,4 +1,10 @@
-import { BrowserRouter as Router, Routes, Route, Outlet, Navigate } from "react-router";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Outlet,
+  Navigate,
+} from "react-router";
 import DefaultLayout from "../../layouts/DefaultLayout";
 import Home from "../../pages/Home";
 import SubscribedPage from "@/pages/SubscribedPage";
@@ -19,7 +25,7 @@ import TestPage from "@/pages/TestPage";
 import ChannelPage from "@/pages/ChannelPage";
 import VideoDetails from "@/pages/Studio/components/VideoDetails";
 import VideoList from "@/pages/Studio/components/VideoList";
-
+import AdminDashboard from "@/pages/Admin/AdminDashboard";
 function AppRoutes() {
   // Component bảo vệ route (Chỉ cho phép truy cập nếu đã login)
   const PrivateRoute = () => {
@@ -58,7 +64,7 @@ function AppRoutes() {
           <Route path="/video/:videoId" element={<WatchPage />} />
         </Route>
 
-       {/* PROTECTED ROUTES (Chỉ dành cho Studio như yêu cầu) */}
+        {/* PROTECTED ROUTES (Chỉ dành cho Studio như yêu cầu) */}
         <Route element={<PrivateRoute />}>
           <Route path="/studio" element={<StudioLayout />}>
             {/* Trang chính - danh sách video */}
@@ -73,11 +79,16 @@ function AppRoutes() {
           </Route>
         </Route>
 
+        <Route element={<PrivateRoute />}>
+          {/* Route Admin - Cần check role trong PrivateRoute nếu muốn bảo mật kỹ hơn */}
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        </Route>
+
         <Route>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
         </Route>
-
       </Routes>
     </Router>
   );
