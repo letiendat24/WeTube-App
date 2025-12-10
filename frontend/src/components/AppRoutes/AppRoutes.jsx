@@ -16,6 +16,9 @@ import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import { useAuth } from "@/context/AuthContext";
 import TestPage from "@/pages/TestPage";
+import ChannelPage from "@/pages/ChannelPage";
+import VideoDetails from "@/pages/Studio/components/VideoDetails";
+import VideoList from "@/pages/Studio/components/VideoList";
 
 function AppRoutes() {
   // Component bảo vệ route (Chỉ cho phép truy cập nếu đã login)
@@ -49,6 +52,7 @@ function AppRoutes() {
           <Route path="/liked" element={<LikedPage />} />
           <Route path="/playlists" element={<AllPlaylistPage />} />
           <Route path="/subscriptions" element={<AllSubscriptionsPage />} />
+          <Route path="/channel/:channelId" element={<ChannelPage />} />
         </Route>
         <Route element={<WatchingLayout />}>
           <Route path="/video/:videoId" element={<WatchPage />} />
@@ -56,9 +60,16 @@ function AppRoutes() {
 
        {/* PROTECTED ROUTES (Chỉ dành cho Studio như yêu cầu) */}
         <Route element={<PrivateRoute />}>
-          <Route element={<StudioLayout />}>
-            <Route path="/studio" element={<Studio />} />
-            <Route path="/studio/content" element={<Studio />} />
+          <Route path="/studio" element={<StudioLayout />}>
+            {/* Trang chính - danh sách video */}
+            <Route index element={<VideoList />} />
+
+            {/* Tải video mới */}
+            <Route path="upload" element={<VideoDetails />} />
+            {/* hoặc nếu bạn tách thành UploadPage thì dùng <UploadPage /> */}
+
+            {/* Chỉnh sửa video */}
+            <Route path="edit/:videoId" element={<VideoDetails />} />
           </Route>
         </Route>
 
