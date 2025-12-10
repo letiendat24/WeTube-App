@@ -1,159 +1,91 @@
-// import { Outlet } from "react-router";
-// import SidebarStudio from "./components/SidebarStudio";
-// import Header from "./components/Header"; 
 
-// export default function StudioLayout() {
-//   return (
-//     <div className="flex flex-col h-screen bg-background">
-//       <Header /> 
-//       <div className="flex flex-1 overflow-hidden"> 
-//         <SidebarStudio /> 
-//         <main className="flex-1 overflow-y-auto"> 
-//           <div className="p-6">
-//             <Outlet />
-//           </div>
-//         </main>
-//       </div>
-//     </div>
-//   );
-// }
-// import { useState } from "react";
 import { Outlet } from "react-router";
 import HeaderStudio from "./components/HeaderStudio";
 import SidebarStudio from "./components/SidebarStudio";
 import VideoDetails from "@/pages/Studio/components/VideoDetails";
 import VideoList from "@/pages/Studio/components/VideoList";
-import React, { useState, useRef } from "react";
-// import HomeStudio from "@/pages/HomeStudio";
+
+// Thêm useEffect để fetch dữ liệu khi mount
+import React, { useState, useEffect } from "react";
 import axios from 'axios';
 // ... (các imports khác)
 
-const API_BASE_URL = "http://localhost:3000/api/videos";
+// API_BASE_URL phải được định nghĩa để dùng trong fetchVideos
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api/videos";
 
-const mockVideosData = [
-  {
-    // ✅ Cần có ID duy nhất để xác định video khi Sửa/Xóa
-    id: '123_react_router',
-    title: "Hướng dẫn xây dựng ứng dụng React Router",
-    duration: "12:35",
-    views: 1540,
-    likes: 120,
-    comments: 45,
-    status: "public", // Dùng cho cột Trạng thái
-    visibility: "Public", // Dùng cho cột Visibility
-    date: "2025-11-20",
-
-    // ✅ Cần có URL cố định ngẫu nhiên (simulated URL)
-    videoUrl: "https://youtu.be/A1bC2dE3fG4",
-    thumbnail: "https://placehold.co/96x56/4169E1/FFFFFF?text=Router",
-    description: "Đây là video hướng dẫn chi tiết cách thiết lập và sử dụng React Router V6 cho các dự án web hiện đại."
-  },
-  {
-    id: '456_node_optimize',
-    title: "Tối ưu hiệu suất cho Node.js API",
-    duration: "08:10",
-    views: 200,
-    likes: 15,
-    comments: 2,
-    status: "private",
-    visibility: "Private",
-    date: "2025-11-15",
-    videoUrl: "https://youtu.be/hIjKlMnOpQ1",
-    thumbnail: "https://placehold.co/96x56/FF8C00/FFFFFF?text=NodeAPI",
-    description: "Các kỹ thuật nâng cao để cải thiện tốc độ xử lý và giảm độ trễ của ứng dụng Node.js."
-  },
-  {
-    id: '789_tailwind_css',
-    title: "Giới thiệu về Tailwind CSS 4.0",
-    duration: "25:00",
-    views: 890,
-    likes: 95,
-    comments: 10,
-    status: "unlisted",
-    visibility: "Unlisted",
-    date: "2025-11-01",
-    videoUrl: "https://youtu.be/PqRsTuVwXyZ",
-    thumbnail: "https://placehold.co/96x56/00CED1/FFFFFF?text=Tailwind",
-    description: "Khám phá các tính năng mới và cách di chuyển dự án lên Tailwind CSS phiên bản 4.0."
-  },
-  {
-    id: '012_draft_upload',
-    title: "Bản nháp Video mới tải lên (Cần hoàn thiện)",
-    duration: "00:00",
-    views: 0,
-    likes: 0,
-    comments: 0,
-    status: "draft",
-    visibility: "Private",
-    date: "2025-11-22",
-    videoUrl: "http://localhost:3000/videos/temp_draft_012",
-    thumbnail: "https://placehold.co/96x56/B0C4DE/333333?text=Draft",
-    description: "Video này đang chờ bạn thêm mô tả chi tiết và thiết lập chế độ hiển thị."
-  },
-];
+// Bỏ mock data vì chúng ta sẽ fetch dữ liệu thực tế
+// const mockVideosData = [ ... ]; // BỎ KHỎI ĐÂY
 
 export default function StudioLayout() {
   const [isOpen, setIsOpen] = useState(true);
   const [selectedVideo, setSelectedVideo] = useState(null);
-  const videoDetailsRef = useRef(null);
-  const [videos, setVideos] = useState(mockVideosData);
 
-  // Hàm API XÓA (GỌI DELETE /api/videos/:videoId)
-  const handleDeleteVideo = async (videoId) => {
-    if (!window.confirm("Bạn có chắc chắn muốn xóa video này?")) {
-      return;
-    }
+  // 1. Quản lý danh sách videos TẠI StudioLayout
+  const [videos, setVideos] = useState([]); // Khởi tạo mảng rỗng
+  const [loadingVideos, setLoadingVideos] = useState(false); // Thêm state loading
 
-    try {
-      // 💡 Cần thêm header Authorization nếu API yêu cầu authMiddleware
-      const token = localStorage.getItem('authToken'); // Giả sử token được lưu ở đây
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-      await axios.delete(`${API_BASE_URL}/${videoId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
 
-      // Cập nhật state để xóa video khỏi danh sách
-      setVideos(prev => prev.filter(v => v.id !== videoId));
-      alert("Video đã được xóa thành công!");
-    } catch (error) {
-      console.error("Lỗi khi xóa video:", error);
-      // Hiển thị thông báo lỗi chi tiết hơn từ server
-      const errorMessage = error.response?.data?.message || "Xóa video thất bại.";
-      alert(errorMessage);
-    }
-  };
+
+  // Loại bỏ videoListRef vì chúng ta sẽ dùng State Lifting
+  // const videoListRef = useRef(); 
 
   const user = {
-    name: "me me",
+    name: "",
     avatar: null,
   };
 
-  const toggleSidebar = () => setIsOpen(!isOpen);
 
-  const handleVideoSelected = (file) => {
-    console.log("VIDEO ĐƯỢC CHỌN:", file);
-    setSelectedVideo(file);
+  // 2. Hàm Fetch Videos để tái sử dụng
+  const fetchVideos = async () => {
+    // Giả định bạn cần token để lấy danh sách video của người dùng
+    const token = localStorage.getItem("token");
+    if (!token) {
+      console.warn("No token found, cannot fetch videos.");
+      return;
+    }
+
+    setLoadingVideos(true);
+    try {
+      // Giả định endpoint để lấy danh sách video của user là /api/videos/my-videos
+      const response = await axios.get(`${API_BASE_URL}/my-videos`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      // Cập nhật state videos, kích hoạt re-render VideoList
+      setVideos(response.data);
+    } catch (error) {
+      console.error("Lỗi khi tải danh sách video:", error);
+    } finally {
+      setLoadingVideos(false);
+    }
   };
 
+  // 3. Tải video khi component mount lần đầu
+  useEffect(() => {
+    fetchVideos();
+  }, []); // [] đảm bảo chỉ chạy 1 lần khi mount
+
+
+  // Hàm đóng modal
+  const handleCloseModal = () => setIsModalOpen(false);
+
+  // 4. Sửa hàm xử lý upload thành công: Chỉ cần gọi lại fetchVideos
+  const handleUploadSuccess = () => {
+    handleCloseModal();
+    // GỌI LẠI HÀM FETCH VIDEOS
+    // Việc này sẽ cập nhật state 'videos' và force VideoList re-render
+    fetchVideos();
+  };
 
 
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* HEADER */}
       <div className="fixed top-0 left-0 right-0 z-50">
-        <HeaderStudio
-          onMenuClick={toggleSidebar}
-          user={user}
-          // onVideoSelected={handleVideoSelected}
-          onVideoSelected={(videoData) => setSelectedVideo(videoData)}
-          // 💡 TRUYỀN PROPS ĐỂ CHUYỂN ĐỔI HEADER
-          isDetailView={!!selectedVideo} // Là true khi selectedVideo tồn tại
-          onBack={() => setSelectedVideo(null)}
-          // TRUYỀN HÀM SAVE: GỌI HÀM handleSubmit TRONG VideoDetails QUA REF
-          onSave={() => videoDetailsRef.current?.handleSubmit()}
-        />
+        {/* Lỗi nhỏ trong prop onMenuClick, sửa lại tên biến cho phù hợp */}
+        <HeaderStudio onMenuClick={() => setIsOpen((p) => !p)} />
       </div>
 
       <div className="flex">
@@ -161,25 +93,275 @@ export default function StudioLayout() {
         <SidebarStudio isOpen={isOpen} user={user} onNavigate={() => setSelectedVideo(null)} />
 
         {/* MAIN CONTENT */}
-        <div
+
+        {/* ==================== MAIN CONTENT (thay đổi theo route) ==================== */}
+        <main
           className={`flex-1 transition-all h-screen overflow-auto duration-300 p-10 ${isOpen ? "ml-64" : "ml-20"
             }`}
         >
-          {/* Nếu không có route con thì load trang HomeStudio */}
-          {/* <Outlet context={{ selectedVideo }} /> */}
-
-          {selectedVideo ? (
-            <VideoDetails
-              videoData={selectedVideo}
-              onBack={() => setSelectedVideo(null)} // Quay lại dashboard
-
-            />
-          ) : (
-            // Hiển thị Dashboard hoặc Video List
-            <VideoList user={user} videos={videos} />
-          )}
-        </div>
+          <div className="p-6 lg:p-10">
+            {/* Ở ĐÂY SẼ HIỆN:
+                - VideoList      (khi vào /studio)
+                - VideoDetails   (khi vào /studio/upload hoặc /studio/edit/:id)
+                - các trang khác trong tương lai
+            */}
+            <Outlet />
+          </div>
+        </main>
       </div>
     </div>
+
   );
 }
+
+
+
+
+// // import { Outlet } from "react-router";
+// import HeaderStudio from "./components/HeaderStudio";
+// import SidebarStudio from "./components/SidebarStudio";
+// import VideoDetails from "@/pages/Studio/components/VideoDetails";
+// import VideoList from "@/pages/Studio/components/VideoList";
+// import { Outlet, useNavigate, useLocation } from "react-router-dom";
+// // Thêm useEffect để fetch dữ liệu khi mount
+// import React, { useState, useEffect } from "react";
+// import axios from 'axios';
+// // ... (các imports khác)
+
+// // API_BASE_URL phải được định nghĩa để dùng trong fetchVideos
+// const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api/videos";
+
+// // Bỏ mock data vì chúng ta sẽ fetch dữ liệu thực tế
+// // const mockVideosData = [ ... ]; // BỎ KHỎI ĐÂY
+
+// export default function StudioLayout() {
+//   const navigate = useNavigate(); // 🧭 Hook điều hướng
+//   const location = useLocation(); // 🗺️ Hook vị trí hiện tại
+//   const [isOpen, setIsOpen] = useState(true);
+//   const [selectedVideo, setSelectedVideo] = useState(null);
+
+//   // 1. Quản lý danh sách videos TẠI StudioLayout
+//   const [videos, setVideos] = useState([]); // Khởi tạo mảng rỗng
+//   const [loadingVideos, setLoadingVideos] = useState(false); // Thêm state loading
+
+//   const [isModalOpen, setIsModalOpen] = useState(false);
+
+//   // Loại bỏ videoListRef vì chúng ta sẽ dùng State Lifting
+//   // const videoListRef = useRef();
+
+//   const user = {
+//     name: "",
+//     avatar: null,
+//   };
+
+
+//   // 2. Hàm Fetch Videos để tái sử dụng
+//   const fetchVideos = async () => {
+//     // Giả định bạn cần token để lấy danh sách video của người dùng
+//     const token = localStorage.getItem("token");
+//     if (!token) {
+//       console.warn("No token found, cannot fetch videos.");
+//       return;
+//     }
+
+//     setLoadingVideos(true);
+//     try {
+//       // Giả định endpoint để lấy danh sách video của user là /api/videos/my-videos
+//       const response = await axios.get(`${API_BASE_URL}/my-videos`, {
+//         headers: { Authorization: `Bearer ${token}` }
+//       });
+
+//       // Cập nhật state videos, kích hoạt re-render VideoList
+//       setVideos(response.data);
+//     } catch (error) {
+//       console.error("Lỗi khi tải danh sách video:", error);
+//     } finally {
+//       setLoadingVideos(false);
+//     }
+//   };
+
+//   // 3. Tải video khi component mount lần đầu
+//   useEffect(() => {
+//     fetchVideos();
+//   }, []); // [] đảm bảo chỉ chạy 1 lần khi mount
+
+//   // Hàm chuyển hướng đến trang chỉnh sửa
+//   const handleEditVideo = (videoData) => {
+//     const videoId = videoData._id || videoData.id;
+//     if (videoId) {
+//       // ⚠️ Đây là bước quan trọng: Chuyển hướng đến URL chỉnh sửa
+//       // Truyền toàn bộ dữ liệu video (đã được tải đầy đủ từ API trong VideoList) qua state
+//       // Giúp VideoDetailsPage tải nhanh hơn nếu cần
+//       navigate(`/studio/edit/${videoId}`, { state: { video: videoData } });
+//     } else {
+//       console.error("Không tìm thấy ID video để chỉnh sửa.");
+//     }
+//   };
+
+//   // Hàm xử lý upload thành công: Chỉ cần gọi lại fetchVideos
+//   const handleUploadSuccess = () => {
+//     // ... xử lý đóng modal (nếu có) ...
+//     fetchVideos();
+//   };
+
+
+
+//   return (
+//     <div className="min-h-screen bg-background text-foreground">
+//       {/* HEADER */}
+//       <div className="fixed top-0 left-0 right-0 z-50">
+//         {/* Lỗi nhỏ trong prop onMenuClick, sửa lại tên biến cho phù hợp */}
+//         <HeaderStudio onMenuClick={() => setIsOpen((p) => !p)} />
+//       </div>
+
+//       <div className="flex">
+//         {/* SIDEBAR */}
+//         <SidebarStudio isOpen={isOpen} user={user} onNavigate={() => navigate('/studio')} />
+
+//         {/* MAIN CONTENT */}
+
+//         {/* ==================== MAIN CONTENT (thay đổi theo route) ==================== */}
+//         <main
+//           className={`flex-1 transition-all h-screen overflow-auto duration-300 p-10 ${isOpen ? "ml-64" : "ml-20"
+//             }`}
+//         >
+//           <div className="p-6 lg:p-10">
+//             {/* ⚠️ TRUYỀN HÀM XỬ LÝ CHO CÁC ROUTE CON BẰNG context */}
+//             <Outlet context={{
+//               onSelectVideo: handleEditVideo, // Đây là hàm cần truyền vào VideoList
+//               onUploadSuccess: handleUploadSuccess,
+//               videos: videos, // Dữ liệu danh sách video (nếu VideoList cần)
+//               loadingVideos: loadingVideos // Trạng thái loading (nếu VideoList cần)
+//             }} />
+//           </div>
+//         </main>
+//       </div>
+//     </div>
+
+//   );
+// }
+
+
+
+// import { Outlet } from "react-router";
+// import HeaderStudio from "./components/HeaderStudio";
+// import SidebarStudio from "./components/SidebarStudio";
+// import VideoDetails from "@/pages/Studio/components/VideoDetails";
+// import VideoList from "@/pages/Studio/components/VideoList";
+
+// // Thêm useEffect để fetch dữ liệu khi mount
+// import React, { useState, useEffect } from "react";
+// import axios from 'axios';
+// // ... (các imports khác)
+
+// // API_BASE_URL phải được định nghĩa để dùng trong fetchVideos
+// const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api/videos";
+
+// // Bỏ mock data vì chúng ta sẽ fetch dữ liệu thực tế
+// // const mockVideosData = [ ... ]; // BỎ KHỎI ĐÂY
+
+// export default function StudioLayout() {
+//   const [isOpen, setIsOpen] = useState(true);
+//   const [selectedVideo, setSelectedVideo] = useState(null);
+
+//   // 1. Quản lý danh sách videos TẠI StudioLayout
+//   const [videos, setVideos] = useState([]); // Khởi tạo mảng rỗng
+//   const [loadingVideos, setLoadingVideos] = useState(false); // Thêm state loading
+
+//   const [isModalOpen, setIsModalOpen] = useState(false);
+
+
+
+//   // Loại bỏ videoListRef vì chúng ta sẽ dùng State Lifting
+//   // const videoListRef = useRef();
+
+//   const user = {
+//     name: "",
+//     avatar: null,
+//   };
+
+
+//   // 2. Hàm Fetch Videos để tái sử dụng
+//   const fetchVideos = async () => {
+//     // Giả định bạn cần token để lấy danh sách video của người dùng
+//     const token = localStorage.getItem("token");
+//     if (!token) {
+//       console.warn("No token found, cannot fetch videos.");
+//       return;
+//     }
+
+//     setLoadingVideos(true);
+//     try {
+//       // Giả định endpoint để lấy danh sách video của user là /api/videos/my-videos
+//       const response = await axios.get(`${API_BASE_URL}/my-videos`, {
+//         headers: { Authorization: `Bearer ${token}` }
+//       });
+
+//       // Cập nhật state videos, kích hoạt re-render VideoList
+//       setVideos(response.data);
+//     } catch (error) {
+//       console.error("Lỗi khi tải danh sách video:", error);
+//     } finally {
+//       setLoadingVideos(false);
+//     }
+//   };
+
+//   // 3. Tải video khi component mount lần đầu
+//   useEffect(() => {
+//     fetchVideos();
+//   }, []); // [] đảm bảo chỉ chạy 1 lần khi mount
+
+//   // 2. Hàm được truyền làm prop onSelectVideo
+//   const handleSelectVideo = (videoData) => {
+//     setSelectedVideo(videoData);
+//   };
+
+//   const handleCloseForm = () => {
+//     setSelectedVideo(null); // Đóng form
+//     // BỔ SUNG: Gọi lại fetchVideos trong VideoList để cập nhật danh sách
+//   };
+
+//   if (selectedVideo) {
+//     // HIỂN THỊ FORM CHỈNH SỬA
+//     return (
+//       <VideoDetailsForm
+//         video={selectedVideo} // Truyền dữ liệu chi tiết
+//         onClose={handleCloseForm}
+//       // Thêm các prop khác (ví dụ: onUpdateSuccess)
+//       />
+//     );
+//   }
+
+//   return (
+//     <div className="min-h-screen bg-background text-foreground">
+//       {/* HEADER */}
+//       <div className="fixed top-0 left-0 right-0 z-50">
+//         {/* Lỗi nhỏ trong prop onMenuClick, sửa lại tên biến cho phù hợp */}
+//         <HeaderStudio onMenuClick={() => setIsOpen((p) => !p)} />
+//       </div>
+
+//       <div className="flex">
+//         {/* SIDEBAR */}
+//         <SidebarStudio isOpen={isOpen} user={user} onNavigate={() => setSelectedVideo(null)} />
+
+//         {/* MAIN CONTENT */}
+
+//         {/* ==================== MAIN CONTENT (thay đổi theo route) ==================== */}
+//         <main
+//           className={`flex-1 transition-all h-screen overflow-auto duration-300 p-10 ${isOpen ? "ml-64" : "ml-20"
+//             }`}
+//         >
+//           <div className="p-6 lg:p-10">
+//             {/* Ở ĐÂY SẼ HIỆN:
+//                 - VideoList      (khi vào /studio)
+//                 - VideoDetails   (khi vào /studio/upload hoặc /studio/edit/:id)
+//                 - các trang khác trong tương lai
+//             */}
+//             <Outlet />
+//           </div>
+//         </main>
+//       </div>
+//     </div>
+
+//   );
+// }

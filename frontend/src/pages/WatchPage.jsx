@@ -1189,6 +1189,11 @@ function WatchPage() {
   const isOwner = currentUserId && channelOwnerId && (currentUserId.toString() === channelOwnerId.toString());
   const showSubscribeButton = !isOwner;
 
+  const getChannelId = (owner) => {
+    if (!owner) return null;
+    return owner._id || owner.id || owner.channelId?._id || owner.channelId?.id;
+  };
+
   return (
     <>
       <div className="relative w-full overflow-hidden bg-black rounded-xl aspect-video group">

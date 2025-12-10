@@ -1,385 +1,334 @@
-import React, { useState, useEffect } from 'react';
+
+
+import React, { useState, useRef } from "react";
 import axios from "axios";
-import { Upload, Copy, Check } from 'lucide-react';
+import { Upload, X, CheckCircle, AlertCircle } from "lucide-react";
 
-export default function VideoDetails({ videoData, onSaveDetails, onBack }) {
 
-    // 💡 Xác định Mode: Nếu videoData có thuộc tính 'id' (từ database), đó là Edit Mode.
-    const isEditMode = videoData && videoData.id;
+import { useAuth } from "@/context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
-    // const [title, setTitle] = useState('Untitled');
-    // const [description, setDescription] = useState('');
-    // const [category, setCategory] = useState('');
-    // const [visibility, setVisibility] = useState('private');
-    const [thumbnail, setThumbnail] = useState(null);
+
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000/api/videos";
+
+
+export default function VideoDetails({ onClose, onUploadSuccess }) {
+    const { user, isAuthenticated } = useAuth();
+    const navigate = useNavigate();
+
+
+    const [title, setTitle] = useState("");
+    const [description, setDescription] = useState("");
+    const [tags, setTags] = useState("");
+    const [visibility, setVisibility] = useState("public");
+
+
     const [videoFile, setVideoFile] = useState(null);
-    const [videoStatus, setVideoStatus] = useState('Waiting');
-    const [subtitles, setSubtitles] = useState('No Subtitles');
-    const [videoLink, setVideoLink] = useState('https://new-tube-...');
-    const [copied, setCopied] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [message, setMessage] = useState('');
+    const [thumbnailFile, setThumbnailFile] = useState(null);
+    const [videoPreview, setVideoPreview] = useState("");
+    const [thumbnailPreview, setThumbnailPreview] = useState("");
+    const [duration, setDuration] = useState("");
 
-    // ✅ KHỞI TẠO STATE
-    // Nếu là Edit Mode (từ database), dùng dữ liệu có sẵn.
-    // Nếu là Create Mode (từ upload), dùng tên file.
-    const [title, setTitle] = useState(videoData
-        ? (isEditMode ? videoData.title : videoData.name.replace(/\.[^/.]+$/, ""))
-        : 'Untitled'
-    );
-    const [description, setDescription] = useState(isEditMode ? videoData.description : '');
-    const [category, setCategory] = useState(isEditMode ? videoData.category : '');
-    const [visibility, setVisibility] = useState(isEditMode ? videoData.visibility : 'private');
 
-    // Lưu trữ URL video/thumbnail cuối cùng (hoặc URL tạm thời)
-    const [finalVideoUrl, setFinalVideoUrl] = useState(isEditMode ? videoData.videoUrl : null);
-    const [finalThumbnailUrl, setFinalThumbnailUrl] = useState(isEditMode ? videoData.thumbnailUrl : null);
+    const [loading, setLoading] = useState(false);
+    const [toast, setToast] = useState({ show: false, type: "", message: "" });
 
-    // useEffect(() => {
-    //     if (videoData) {
-    //         setTitle(videoData.name.replace(/\.[^/.]+$/, ""));
-    //         setVideoFile(videoData);
-    //         setVideoStatus("Uploaded");
 
-    //         const tempUrl = URL.createObjectURL(videoData);
-    //         setVideoLink(tempUrl);
-    //     }
-    // }, [videoData]);
+    const videoRef = useRef(null);
+    const thumbRef = useRef(null);
 
-    // useEffect(() => {
-    //     if (!isEditMode && videoData && videoData instanceof File) {
-    //         // Trường hợp TẠO MỚI: Dùng file blob URL cho preview/link tạm thời
-    //         const tempUrl = URL.createObjectURL(videoData);
-    //         setVideoFile(videoData);
-    //         setVideoLink(tempUrl);
-    //         setVideoStatus("Uploaded");
 
-    //         // ⚠️ THÊM CLEANUP FUNCTION RẤT QUAN TRỌNG
-    //         return () => {
-    //             URL.revokeObjectURL(tempUrl);
-    //         };
-    //     } else if (isEditMode) {
-    //         // Trường hợp CHỈNH SỬA: Đã có URL thật từ database
-    //         setVideoLink(videoData.videoUrl);
-    //         setVideoStatus("Published"); // Giả định
-    //         setThumbnail(videoData.thumbnailUrl);
-    //     }
-    // }, [videoData]);
+    const showToast = (type, message) => {
+        setToast({ show: true, type, message });
+        setTimeout(() => setToast({ show: false }), 5000);
+    };
 
-    useEffect(() => {
-        if (videoData && videoData.videoUrl) { // Kiểm tra videoUrl đã có
-            setTitle(videoData.name.replace(/\.[^/.]+$/, "") || videoData.title || 'Untitled');
 
-            // ✅ CẬP NHẬT: Dùng videoData.videoUrl (link ngẫu nhiên)
-            setVideoLink(videoData.videoUrl);
 
-            // ... (các state khác)
-            // KHÔNG CÓ URL.createObjectURL()
-        }
-    }, [videoData]);
 
-    const API_UPLOAD_VIDEO = "http://localhost:3000//api/videos";     // CHANGE THIS
-    const API_SAVE_DETAILS = "http://localhost:3000/api/videos";           // CHANGE THIS
-
-    const categories = [
-        "Film & Animation", "Autos & Vehicles", "Music", "Pets & Animals", "Sports",
-        "Travel & Events", "Gaming", "People & Blogs", "Comedy", "Entertainment",
-        "News & Politics", "Howto & Style", "Education", "Science & Technology", "Nonprofits & Activism"
-    ];
-
-    // ============================================
-    // THUMBNAIL UPLOAD PREVIEW
-    // ============================================
-    const handleThumbnailUpload = (e) => {
+    const handleVideoChange = (e) => {
         const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => setThumbnail(reader.result);
-            reader.readAsDataURL(file);
-        }
+        if (!file) return;
+        setVideoFile(file);
+        const url = URL.createObjectURL(file);
+        setVideoPreview(url);
+
+
+        const video = document.createElement("video");
+        video.src = url;
+        video.onloadedmetadata = () => {
+            const m = Math.floor(video.duration / 60);
+            const s = Math.floor(video.duration % 60).toString().padStart(2, "0");
+            setDuration(`${m}:${s}`);
+        };
     };
 
-    // ============================================
-    // VIDEO UPLOAD (REAL FILE)
-    // ============================================
-    const handleVideoUpload = (e) => {
+
+    const handleThumbnailChange = (e) => {
         const file = e.target.files[0];
-        if (file) {
-            setVideoFile(file);
-            setVideoStatus("Uploaded");
-        }
+        if (!file) return;
+        setThumbnailFile(file);
+        setThumbnailPreview(URL.createObjectURL(file));
     };
 
-    // ============================================
-    // COPY LINK
-    // ============================================
-    const copyToClipboard = () => {
-        navigator.clipboard.writeText(videoLink);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-    };
 
-    // ============================================
-    // SUBMIT LOGIC (Tạo mới hoặc Chỉnh sửa)
-    // ============================================
-    const handleSubmit = async () => {
-        // Kiểm tra cơ bản
-        if (!title || (!isEditMode && !videoFile)) {
-            setMessage("✗ Vui lòng điền tiêu đề và tải file video (nếu là tạo mới).");
+    const handleUpload = async () => {
+        if (!isAuthenticated || !user) {
+            showToast("error", "Bạn cần đăng nhập để upload video!");
             return;
         }
 
-        setIsSubmitting(true);
-        setMessage('');
 
-        try {
-            // 💡 BƯỚC 1: Xử lý Upload file (Video và Thumbnail)
-            // Trong luồng này, chúng ta giả định rằng file video đã được upload lên S3/Cloud 
-            // VÀ server đã trả về videoUrl/thumbnailUrl TẠM THỜI cho file đó.
-            // Nếu bạn không có logic upload file thực tế, HÃY GÁN MỘT URL MÔ PHỎNG.
-
-            let currentVideoUrl = finalVideoUrl;
-            let currentThumbnailUrl = finalThumbnailUrl;
-
-            if (!isEditMode) {
-                // Nếu TẠO MỚI, phải có URL TẠM THỜI cho API POST hoạt động.
-                // Trong thực tế, HeaderStudio sẽ trả về URL này.
-                // Tạm thời, gán URL mô phỏng nếu chưa có:
-                if (!currentVideoUrl) {
-                    currentVideoUrl = `http://localhost:3000/videos/${videoFile.name}_${Date.now()}.mp4`;
-                    currentThumbnailUrl = `http://localhost:3000/thumbnails/${videoFile.name}_${Date.now()}.jpg`;
-                }
-            }
-
-            // 💡 BƯỚC 2: Chuẩn bị dữ liệu metadata
-            const metadata = {
-                title,
-                description,
-                tags: [], // Thêm tags nếu cần
-                visibility,
-                category,
-                // ✅ SỬ DỤNG URL CUỐI CÙNG HOẶC MÔ PHỎNG ĐỂ GỌI API BACKEND
-                videoUrl: currentVideoUrl,
-                thumbnailUrl: currentThumbnailUrl,
-            };
-
-            let saveResponse;
-            const headers = { 'Authorization': `Bearer YOUR_AUTH_TOKEN` }; // Thêm token xác thực
-
-            if (isEditMode) {
-                // CHẾ ĐỘ CHỈNH SỬA: PATCH/PUT tới /api/videos/:id
-                const API_UPDATE_DETAILS = `${API_SAVE_DETAILS}/${videoData.id}`;
-                saveResponse = await axios.patch(API_UPDATE_DETAILS, metadata, { headers });
-                setMessage("✓ Cập nhật video thành công!");
-            } else {
-                // CHẾ ĐỘ TẠO MỚI: POST tới /api/videos (như router backend của bạn)
-                saveResponse = await axios.post(API_SAVE_DETAILS, metadata, { headers });
-                setMessage("✓ Video đã được lưu và xuất bản thành công!");
-            }
-
-            // ✅ GỌI HÀM CALLBACK VỀ COMPONENT CHA
-            onSaveDetails(saveResponse.data); // Gửi dữ liệu video mới về StudioLayout
-
-        } catch (error) {
-            console.error("Lỗi khi lưu/cập nhật video:", error);
-            setMessage("✗ Lỗi Server hoặc xác thực.");
+        if (!title.trim()) {
+            showToast("error", "Vui lòng nhập tiêu đề video.");
+            return;
+        }
+        if (!videoFile) {
+            showToast("error", "Vui lòng chọn file video.");
+            return;
+        }
+        if (!thumbnailFile) {
+            showToast("error", "Vui lòng chọn thumbnail.");
+            return;
         }
 
-        setIsSubmitting(false);
+
+        setLoading(true);
+
+
+        const tagArray = tags
+            .split(",")
+            .map((t) => t.trim())
+            .filter((t) => t.length > 0);
+
+
+        const formData = new FormData();
+        formData.append("title", title.trim());
+        formData.append("description", description.trim());
+        formData.append("tags", JSON.stringify(tagArray));
+        formData.append("visibility", visibility);
+        formData.append("video", videoFile);
+        formData.append("thumbnail", thumbnailFile);
+
+
+        formData.append("userId", user._id || user.id);
+
+
+        try {
+            const token = localStorage.getItem("token");
+
+
+            await axios.post(`${API_BASE}`, formData, {
+                timeout: 600000,
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+
+            showToast("success", "Tải video thành công! Video đã được gắn vào kênh của bạn.");
+
+
+            // Reset form như cũ
+            setTitle("");
+            setDescription("");
+            setTags("");
+            setVisibility("public");
+            setVideoFile(null);
+            setThumbnailFile(null);
+            setVideoPreview("");
+            setThumbnailPreview("");
+            setDuration("");
+            if (videoRef.current) videoRef.current.value = "";
+            if (thumbRef.current) thumbRef.current.value = "";
+
+
+            // BÁO CHO COMPONENT CHA BIẾT RẰNG UPLOAD THÀNH CÔNG
+            onUploadSuccess?.();
+
+
+            onClose?.();
+
+
+        } catch (err) {
+            const msg =
+                err.response?.data?.message ||
+                err.message ||
+                "Upload thất bại, vui lòng thử lại.";
+            showToast("error", msg);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    // ============================================
-    // SUBMIT LOGIC — AXIOS FULL INTEGRATION
-    // ============================================
-    const saveDetails = async () => {
 
-        // 2️⃣ SAVE VIDEO DETAILS (JSON)
-        const detailsToSave = {
-            title,
-            description,
-            category,
-            visibility,
-            thumbnail: thumbnail || null,
-            videoStatus,
-            subtitles,
-            videoLink: uploadedVideoUrl,
-            uploadedAt: new Date().toISOString(),
-            fileName: videoFile.name,
-            fileSize: videoFile.size
-        };
-        onSaveDetails(detailsToSave);
-    };
-    // const handleSubmit = async () => {
-    //     // Sửa logic handleSubmit để CHỈ GỌI API SAVE DETAILS
-    //     if (!videoFile) {
-    //         setMessage("✗ Video file is missing.");
-    //         return;
-    //     }
-
-    //     setIsSubmitting(true);
-    //     setMessage('');
-
-    //     try {
-    //         // ⚠️ BỎ BƯỚC UPLOAD FILE (1️⃣) TRONG ĐÂY NẾU HEADER STUDIO ĐÃ XỬ LÝ UPLOAD RỒI.
-    //         // Nếu bạn muốn VideoDetails xử lý việc tải lên thực tế sau khi nhập metadata:
-
-    //         // 1️⃣ GỌI API ĐỂ CHỈ LƯU METADATA (VÀO SỬ DỤNG videoFile.id/url ĐƯỢC TRẢ VỀ TỪ UPLOAD TRƯỚC)
-    //         const videoData = {
-    //             title, description, category, visibility,
-    //             thumbnail: thumbnail || null, videoLink: videoLink,
-    //             uploadedAt: new Date().toISOString(), fileName: videoFile.name, fileSize: videoFile.size
-    //         };
-
-    //         // Gọi API lưu chi tiết
-    //         const saveResponse = await axios.post(API_SAVE_DETAILS, videoData);
-
-    //         setMessage("✓ Video details saved successfully!");
-    //         // Gọi onBack hoặc onSave từ component cha để xử lý chuyển trang
-    //         // onSave(saveResponse.data); // Dùng prop onSave nếu có
-
-    //     } catch (error) {
-    //         // ... (xử lý lỗi)
-    //     }
-
-    //     setIsSubmitting(false);
-    // };
-
-    // ========================================================================
-    // UI RENDER
-    // ========================================================================
     return (
-        <div className="min-h-screen bg-white">
+        <div className="max-w-5xl mx-auto p-2 bg-white">
+            {/* <h1 className="text-3xl font-bold mb-8">Upload video</h1> */}
 
 
-            {/* MAIN CONTENT */}
-            <main className="flex-1 p-8">
-                <div className="max-w-6xl mx-auto">
-                    <div className="flex justify-between items-start mb-8">
-                        <div>
-                            <h1 className="text-3xl font-semibold mb-2">Video details</h1>
-                            <p className="text-gray-500">Manage your video details</p>
-                        </div>
-                        <button
-                            onClick={handleSubmit}
-                            disabled={isSubmitting}
-                            className="px-6 py-2 bg-gray-800 text-white rounded hover:bg-gray-700 disabled:opacity-50"
-                        >
-                            {isSubmitting ? "Saving..." : (isEditMode ? "Update" : "Save")}
-                        </button>
+            
+            {toast.show && (
+                <div className={`fixed top-20 right-6 z-50 flex items-center gap-3 px-6 py-4 rounded-xl text-white shadow-2xl animate-slide-in ${toast.type === "success" ? "bg-green-600" : "bg-red-600"}`}>
+                    {toast.type === "success" ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
+                    <span className="font-medium">{toast.message}</span>
+                    <button onClick={() => setToast({ ...toast, show: false })} className="ml-4">
+                        <X size={18} />
+                    </button>
+                </div>
+            )}
+
+
+            <div className="grid lg:grid-cols-2 gap-10">
+                {/* Left: Metadata Form (Chỉ còn các input text, textarea, select) */}
+                <div className="space-y-7">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Tiêu đề <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Nhập tiêu đề hấp dẫn..."
+                            maxLength={100}
+                        />
+                        <p className="text-xs text-gray-500 mt-1">{title.length}/100</p>
                     </div>
 
-                    {message && (
-                        <div className={`mb-4 p-4 rounded ${message.includes("✓")
-                            ? "bg-green-50 text-green-800"
-                            : "bg-red-50 text-red-800"
-                            }`}>
-                            {message}
-                        </div>
-                    )}
 
-                    {/* 2 COLUMN LAYOUT */}
-                    <div className="grid grid-cols-3 gap-8">
-                        {/* LEFT SIDE */}
-                        <div className="col-span-2 space-y-6">
-                            {/* TITLE */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Mô tả</label>
+                        <textarea
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            rows={6}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Hãy kể cho mọi người video này nói về điều gì..."
+                        />
+                    </div>
+
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Tags (ngăn cách bằng dấu phẩy)
+                        </label>
+                        <input
+                            type="text"
+                            value={tags}
+                            onChange={(e) => setTags(e.target.value)}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                            placeholder="hài hước, lập trình react nextjs..."
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Ví dụ: funny, tutorial, react</p>
+                    </div>
+
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Hiển thị</label>
+                        <select
+                            value={visibility}
+                            onChange={(e) => setVisibility(e.target.value)}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                        >
+                            <option value="public">Public - Mọi người đều thấy</option>
+                            <option value="unlisted">Unlisted - Chỉ có link mới xem được</option>
+                            <option value="private">Private - Chỉ mình tôi</option>
+                        </select>
+                    </div>
+                </div>
+
+
+                {/* Right: Preview & File Inputs (Đã chuyển file input sang đây) */}
+                <div className="space-y-8">
+
+
+                    {/* KHỐI 1: CHỌN VÀ XEM TRƯỚC VIDEO */}
+                    <div>
+                        {/* INPUT VIDEO ĐÃ CHUYỂN TỚI ĐÂY */}
+                        <div className="flex items-center justify-between mb-4">
+                            {/* Input Video (LEFT SIDE) */}
                             <div>
-                                <label className="block text-sm font-medium mb-2">
-                                    Title
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Video <span className="text-red-500">*</span>
                                 </label>
                                 <input
-                                    value={title}
-                                    onChange={(e) => setTitle(e.target.value)}
-                                    className="w-full px-4 py-2 border rounded"
+                                    ref={videoRef}
+                                    type="file"
+                                    accept="video/*"
+                                    onChange={handleVideoChange}
+                                    // Thay đổi chiều rộng input tệp để nó không chiếm quá nhiều chỗ
+                                    className="block w-100 text-sm file:mr-4 file:py-3 file:px-6 file:rounded-lg file:border-0 file:bg-blue-600 file:text-white hover:file:bg-blue-700"
                                 />
                             </div>
-
-                            {/* DESCRIPTION */}
-                            <div>
-                                <label className="block text-sm font-medium mb-2">Description</label>
-                                <textarea
-                                    rows="8"
-                                    value={description}
-                                    onChange={(e) => setDescription(e.target.value)}
-                                    className="w-full px-4 py-2 border rounded resize-none"
-                                    placeholder="Add a description to your video"
-                                />
+                        </div>
+                        {videoPreview ? (
+                            <div className="relative rounded-xl overflow-hidden shadow-lg bg-black">
+                                <video controls className="w-full" src={videoPreview} />
+                                {duration && (
+                                    <div className="absolute bottom-3 right-3 bg-black/70 text-white px-3 py-1 rounded text-sm font-medium">
+                                        {duration}
+                                    </div>
+                                )}
                             </div>
+                        ) : (
+                            <div className="aspect-video bg-gray-100 border-2 border-dashed rounded-xl flex items-center justify-center">
+                                <Upload className="w-16 h-16 text-gray-400" />
+                            </div>
+                        )}
+                    </div>
 
-                            {/* THUMBNAIL */}
+
+                    {/* KHỐI 2: CHỌN VÀ XEM TRƯỚC THUMBNAIL */}
+                    <div>
+                        {/* INPUT THUMBNAIL ĐÃ CHUYỂN TỚI ĐÂY */}
+                        <div className="flex items-center justify-between mb-4">
                             <div>
-                                <label className="block text-sm font-medium mb-3">Thumbnail</label>
-                                <input type="file" accept="image/*" id="thumb" className="hidden" onChange={handleThumbnailUpload} />
-                                <label htmlFor="thumb" className="cursor-pointer block w-40 h-24 bg-gray-900 rounded">
-                                    {thumbnail ? (
-                                        <img src={thumbnail} className="w-full h-full object-cover rounded" />
-                                    ) : (
-                                        <div className="h-full flex items-center justify-center text-white">Upload</div>
-                                    )}
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Thumbnail <span className="text-red-500">*</span>
                                 </label>
-                            </div>
-
-                            {/* CATEGORY */}
-                            <div>
-                                <label className="block text-sm font-medium mb-2">Category</label>
-                                <select
-                                    value={category}
-                                    onChange={(e) => setCategory(e.target.value)}
-                                    className="w-full px-4 py-2 border rounded"
-                                >
-                                    <option value="">Select category</option>
-                                    {categories.map((cat) => (
-                                        <option key={cat}>{cat}</option>
-                                    ))}
-                                </select>
+                                <input
+                                    ref={thumbRef}
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleThumbnailChange}
+                                    className="block w-100 text-sm file:mr-4 file:py-3 file:px-6 file:rounded-lg file:border-0 file:bg-purple-600 file:text-white hover:file:bg-purple-700"
+                                />
                             </div>
                         </div>
 
-                        {/* RIGHT SIDE */}
-                        <div className="space-y-6">
-                            {/* THUMBNAIL PREVIEW */}
-                            <div className="bg-gray-900 rounded-lg aspect-video flex items-center justify-center">
-                                {thumbnail ? (
-                                    <img src={thumbnail} className="w-full h-full object-cover rounded-lg" />
-                                ) : (
-                                    <Upload className="text-white w-12 h-12" />
-                                )}
-                            </div>
 
-                            {/* LINK */}
-                            <div>
-                                <label className="block text-sm mb-2">Video link</label>
-                                <div className="flex gap-2">
-                                    <input value={videoLink} readOnly className="flex-1 bg-gray-100 px-3 py-2 border rounded text-blue-600 text-sm" />
-                                    <button onClick={copyToClipboard} className="p-2">
-                                        {copied ? <Check className="text-green-600" /> : <Copy />}
-                                    </button>
+
+
+                        <div className="max-w-xs">
+                            {thumbnailPreview ? (
+                                <img src={thumbnailPreview} alt="Thumbnail" className="w-full aspect-video object-cover rounded-xl shadow-md border" />
+                            ) : (
+                                <div className="aspect-video bg-gray-100 border-2 border-dashed rounded-xl flex items-center justify-center">
+                                    <Upload className="w-12 h-12 text-gray-400" />
                                 </div>
-                            </div>
-
-                            {/* STATUS */}
-                            <p><b>Status:</b> {videoStatus}</p>
-                            <p><b>Subtitles:</b> {subtitles}</p>
-
-                            {/* VISIBILITY */}
-                            <div>
-                                <label className="block text-sm mb-3">Visibility</label>
-                                <select
-                                    value={visibility}
-                                    onChange={(e) => setVisibility(e.target.value)}
-                                    className="w-full px-4 py-2 border rounded"
-                                >
-                                    <option value="private">🔒 Private</option>
-                                    <option value="unlisted">🔗 Unlisted</option>
-                                    <option value="public">🌍 Public</option>
-                                </select>
-                            </div>
+                            )}
                         </div>
                     </div>
                 </div>
-            </main>
-        </div>
+            </div>
 
+
+            {/* Upload Button */}
+            <div className="mt-12 text-center">
+                <button
+                    onClick={handleUpload}
+                    disabled={loading}
+                    className={`min-w-[200px] px-10 py-4 rounded-xl font-semibold text-white text-lg transition-all shadow-lg ${loading
+                        ? "bg-gray-400 cursor-not-allowed"
+                        : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transform hover:scale-105"
+                        }`}
+                >
+                    {loading ? "Đang tải..." : "Tải Video"}
+                </button>
+            </div>
+        </div>
     );
 }
-
 
