@@ -130,25 +130,25 @@ function AdminDashboard() {
     return <div className="p-10 text-center">Đang tải dữ liệu hệ thống...</div>;
 
   return (
-    <div className="min-h-screen bg-gray-50/50 p-6">
+    <div className="min-h-screen p-6 bg-gray-50/50">
       {/* --- HEADER --- */}
-      <div className="mb-8 flex items-center justify-between">
+      <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
           <p className="text-gray-500">
             Tổng quan hệ thống & Quản lý người dùng
           </p>
         </div>
-        <div className="flex items-center gap-2 rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-700">
-          <Activity className="h-4 w-4" />
+        <div className="flex items-center gap-2 px-3 py-1 text-sm font-medium text-green-700 bg-green-100 rounded-full">
+          <Activity className="w-4 h-4" />
           System: {stats.systemStatus || "Healthy"}
         </div>
       </div>
 
       {/* --- PHẦN 1: THỐNG KÊ (STATS CARDS) --- */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-3 mb-8">
+      <div className="grid grid-cols-1 gap-6 mb-8 md:grid-cols-3">
         {/* Card Users */}
-        <div className="rounded-xl border bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
+        <div className="p-6 transition-shadow bg-white border shadow-sm rounded-xl hover:shadow-md">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500">Tổng User</p>
@@ -156,17 +156,17 @@ function AdminDashboard() {
                 {stats.totalUsers.toLocaleString()}
               </h3>
             </div>
-            <div className="rounded-full bg-blue-100 p-3 text-blue-600">
-              <Users className="h-6 w-6" />
+            <div className="p-3 text-blue-600 bg-blue-100 rounded-full">
+              <Users className="w-6 h-6" />
             </div>
           </div>
-          <p className="mt-2 text-xs text-green-600 flex items-center gap-1">
+          <p className="flex items-center gap-1 mt-2 text-xs text-green-600">
              Đang hoạt động
           </p>
         </div>
 
         {/* Card Videos */}
-        <div className="rounded-xl border bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
+        <div className="p-6 transition-shadow bg-white border shadow-sm rounded-xl hover:shadow-md">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500">Tổng Video</p>
@@ -174,15 +174,15 @@ function AdminDashboard() {
                 {stats.totalVideos.toLocaleString()}
               </h3>
             </div>
-            <div className="rounded-full bg-red-100 p-3 text-red-600">
-              <Video className="h-6 w-6" />
+            <div className="p-3 text-red-600 bg-red-100 rounded-full">
+              <Video className="w-6 h-6" />
             </div>
           </div>
           <p className="mt-2 text-xs text-gray-500">Nội dung toàn server</p>
         </div>
 
         {/* Card Views */}
-        <div className="rounded-xl border bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
+        <div className="p-6 transition-shadow bg-white border shadow-sm rounded-xl hover:shadow-md">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500">Tổng Lượt Xem</p>
@@ -190,8 +190,8 @@ function AdminDashboard() {
                 {stats.totalViews.toLocaleString()}
               </h3>
             </div>
-            <div className="rounded-full bg-green-100 p-3 text-green-600">
-              <Eye className="h-6 w-6" />
+            <div className="p-3 text-green-600 bg-green-100 rounded-full">
+              <Eye className="w-6 h-6" />
             </div>
           </div>
           <p className="mt-2 text-xs text-gray-500">Tương tác hệ thống</p>
@@ -202,19 +202,19 @@ function AdminDashboard() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         
         {/* Cột trái: Biểu đồ (Chiếm 1 phần) */}
-        <div className="rounded-xl border bg-white p-6 shadow-sm lg:col-span-1">
+        <div className="p-6 bg-white border shadow-sm rounded-xl lg:col-span-1">
           <h3 className="mb-4 text-lg font-semibold text-gray-900">
             Biểu đồ hệ thống
           </h3>
-          <div className="h-64 w-full flex items-center justify-center">
+          <div className="flex items-center justify-center w-full h-64">
              {/* Chart Component */}
             <Bar options={chartOptions} data={chartData} />
           </div>
         </div>
 
         {/* Cột phải: Danh sách User (Chiếm 2 phần) */}
-        <div className="rounded-xl border bg-white p-6 shadow-sm lg:col-span-2">
-          <div className="mb-6 flex items-center justify-between">
+        <div className="p-6 bg-white border shadow-sm rounded-xl lg:col-span-2">
+          <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-semibold text-gray-900">
               Quản lý người dùng
             </h3>
@@ -228,8 +228,8 @@ function AdminDashboard() {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-gray-500">
-              <thead className="bg-gray-50 text-xs uppercase text-gray-700">
+            <table className="w-full text-sm text-left text-gray-500">
+              <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                 <tr>
                   <th className="px-6 py-3">Người dùng</th>
                   <th className="px-6 py-3">Vai trò</th>
@@ -239,55 +239,69 @@ function AdminDashboard() {
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {users.length > 0 ? (
-                  users.map((user) => (
-                    <tr key={user._id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-9 w-9">
-                            <AvatarImage src={user.avatarUrl} />
-                            <AvatarFallback>
-                              {user.username?.[0]?.toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex flex-col">
-                            <span className="font-medium text-gray-900">
-                              {user.username}
-                            </span>
-                            <span className="text-xs text-gray-500">
-                              {user.email}
-                            </span>
+                  users.map((user, index) => {
+                    // --- ĐOẠN DEBUG: In ra dữ liệu user để kiểm tra ---
+                    // Bạn nhấn F12 -> Console để xem nó in ra gì nhé
+                    console.log(`User thứ ${index}:`, user);
+                    
+                    // Lấy ID an toàn: Ưu tiên _id, nếu không có thì lấy id
+                    const userId = user._id || user.id; 
+
+                    return (
+                      <tr key={userId} className="hover:bg-gray-50">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-9 w-9">
+                              <AvatarImage src={user.avatarUrl} />
+                              <AvatarFallback>
+                                {user.username?.[0]?.toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex flex-col">
+                              <span className="font-medium text-gray-900">
+                                {user.username}
+                              </span>
+                              <span className="text-xs text-gray-500">
+                                {user.email}
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold leading-5 ${
-                            user.role === "admin"
-                              ? "bg-purple-100 text-purple-800"
-                              : "bg-blue-100 text-blue-800"
-                          }`}
-                        >
-                          {user.role}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        {formatDateTime(user.createdAt)}
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        {user.role !== "admin" && (
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            className="h-8 gap-1 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 shadow-none border border-red-200"
-                            onClick={() => handleDeleteUser(user._id)}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span
+                            className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold leading-5 ${
+                              user.role === "admin"
+                                ? "bg-purple-100 text-purple-800"
+                                : "bg-blue-100 text-blue-800"
+                            }`}
                           >
-                            <Trash2 className="h-4 w-4" />
-                            Xóa
-                          </Button>
-                        )}
-                      </td>
-                    </tr>
-                  ))
+                            {user.role}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          {formatDateTime(user.createdAt)}
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          {user.role !== "admin" && (
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              className="h-8 gap-1 text-red-600 border border-red-200 shadow-none bg-red-50 hover:bg-red-100 hover:text-red-700"
+                              // SỬA LẠI: Truyền biến userId đã check kỹ ở trên
+                              onClick={() => {
+                                console.log("Chuẩn bị xóa ID:", userId); // Log check khi bấm nút
+                                if (!userId) alert("Lỗi: Không tìm thấy ID người dùng!");
+                                else handleDeleteUser(userId);
+                              }}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              Xóa
+                            </Button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })
                 ) : (
                   <tr>
                     <td colSpan="4" className="px-6 py-8 text-center">
@@ -300,7 +314,7 @@ function AdminDashboard() {
           </div>
 
           {/* Pagination Controls */}
-          <div className="mt-4 flex justify-between items-center border-t pt-4">
+          <div className="flex items-center justify-between pt-4 mt-4 border-t">
              <span className="text-sm text-gray-500">Trang {currentPage} / {totalPages}</span>
              <div className="flex gap-2">
                 <Button 
