@@ -1,18 +1,23 @@
-// src/pages/ChannelPage.jsx – ĐÃ TỐI ƯU VỚI VideoCard + GIỮ NGUYÊN GIAO DIỆN ĐẸP
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { CheckCircle, Bell } from 'lucide-react';
-import VideoCard from '@/components/VideoCard'; // Đường dẫn đúng của bạn
+import { CheckCircle } from 'lucide-react';
+import VideoCard from '@/components/VideoCard';
+import SubscribeButton from '@/components/SubscribeButton'; 
+import axiosClient from '@/api/axiosClient';
+import channelApi from "@/api/channelApi"; // Import channelApi để dùng hàm getMySubscriptions giống WatchPage
+import { useAuth } from "@/context/AuthContext"; 
 
 const ChannelPage = () => {
     const { channelId } = useParams();
+    const { user: currentUser, isAuthenticated } = useAuth();
+
     const [channelData, setChannelData] = useState(null);
     const [videos, setVideos] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    // State trạng thái Sub (Giống WatchPage)
     const [isSubscribed, setIsSubscribed] = useState(false);
-    const [showMoreDesc, setShowMoreDesc] = useState(false);
 
     useEffect(() => {
         const fetchChannelAndVideos = async () => {
@@ -20,41 +25,47 @@ const ChannelPage = () => {
                 setLoading(true);
                 setError(null);
 
-                const channelRes = await fetch(`http://localhost:3000/api/channels/${channelId}`);
-                if (!channelRes.ok) throw new Error('Không tìm thấy kênh');
-
-                const channelJson = await channelRes.json();
-                const channel = channelJson.data || channelJson.channel || channelJson;
+                // --- 1. LẤY THÔNG TIN KÊNH ---
+                const response = await axiosClient.get(`/channels/${channelId}`);
+                const dataRaw = response.data || response; 
+                const channel = dataRaw.data || dataRaw.channel || dataRaw;
 
                 setChannelData({
+                    _id: channel._id || channelId,
                     name: channel.channelName || channel.name || 'Kênh YouTube',
                     handle: channel.handle || `@channel${channelId.slice(-6)}`,
                     banner: channel.bannerUrl || channel.banner,
                     subscribers: channel.subscribersCount || channel.subscribers || 0,
                     description: channel.description || '',
                     verified: channel.verified === true,
+                    avatarUrl: channel.avatarUrl
                 });
 
-                let videoList = [];
-                try {
-                    const videosRes = await fetch(`http://localhost:3000/api/videos?channelId=${channelId}&limit=50`);
-                    if (videosRes.ok) {
-                        const videosJson = await videosRes.json();
-                        videoList = videosJson.data || videosJson.videos || videosJson || [];
-                    }
-                } catch (err) { }
-
-                if (videoList.length === 0) {
-                    try {
-                        const altRes = await fetch(`http://localhost:3000/api/channels/${channelId}/videos`);
-                        if (altRes.ok) {
-                            const altJson = await altRes.json();
-                            videoList = altJson.videos || altJson.data || altJson || [];
-                        }
-                    } catch (err) { }
+                // --- 2. QUAN TRỌNG: KIỂM TRA SUB (LOGIC TỪ WATCHPAGE) ---
+                // Chỉ kiểm tra khi đã đăng nhập
+                if (isAuthenticated) {
+                    await checkUserInteractions(channel._id || channelId);
+                } else {
+                    setIsSubscribed(false);
                 }
 
-                // QUAN TRỌNG: Đảm bảo mỗi video có channelInfo để VideoCard hoạt động đúng
+                // --- 3. LẤY VIDEO ---
+                let videoList = [];
+                try {
+                    const vidRes = await axiosClient.get(`/videos`, {
+                        params: { channelId: channelId, limit: 50 }
+                    });
+                    const vidData = vidRes.data || vidRes;
+                    videoList = vidData.data || vidData.videos || vidData || [];
+                } catch (err) {
+                    // Fallback
+                    try {
+                        const altRes = await axiosClient.get(`/channels/${channelId}/videos`);
+                        const altData = altRes.data || altRes;
+                        videoList = altData.videos || altData.data || [];
+                    } catch (e) {}
+                }
+
                 const enrichedVideos = videoList.map(video => ({
                     ...video,
                     channelInfo: {
@@ -66,16 +77,46 @@ const ChannelPage = () => {
 
                 setVideos(enrichedVideos);
             } catch (err) {
-                console.error(err);
-                setError(err.message);
+                console.error("Lỗi tải trang kênh:", err);
+                setError("Không thể tải thông tin kênh hoặc kênh không tồn tại.");
             } finally {
                 setLoading(false);
             }
         };
 
         if (channelId) fetchChannelAndVideos();
-    }, [channelId]);
+    }, [channelId, isAuthenticated]);
 
+    // --- HÀM CHECK SUB (COPY TỪ WATCHPAGE SANG) ---
+    const checkUserInteractions = async (targetChannelId) => {
+        try {
+            // Gọi API lấy danh sách đã đăng ký
+            const subRes = await channelApi.getMySubscriptions();
+            const mySubs = Array.isArray(subRes) ? subRes : (subRes.data || []);
+            
+            // So sánh ID chuẩn xác (xử lý cả objectId và string)
+            const isSub = mySubs.some((sub) => {
+                const subId = sub.channelId?._id || sub.channelId?.id || sub._id;
+                return subId?.toString() === targetChannelId?.toString();
+            });
+            
+            console.log("ChannelPage Check Sub:", isSub); // Log để debug
+            setIsSubscribed(isSub);
+        } catch (error) {
+            console.warn("Lỗi kiểm tra tương tác:", error);
+        }
+    };
+
+    // Callback cập nhật UI khi bấm nút (Optimistic Update)
+    const handleSubToggle = (newStatus) => {
+        setIsSubscribed(newStatus);
+        setChannelData(prev => ({
+            ...prev,
+            subscribers: newStatus ? (prev.subscribers + 1) : (prev.subscribers - 1)
+        }));
+    };
+
+    // Helper Components
     const formatNumber = (n) => {
         if (!n) return '0';
         if (n >= 1e9) return (n / 1e9).toFixed(1) + ' tỷ';
@@ -84,58 +125,47 @@ const ChannelPage = () => {
         return n.toString();
     };
 
-    // Avatar chữ cái đầu + xám đậm
     const LetterAvatar = ({ name, large = false }) => {
         const initials = name ? name.trim().charAt(0).toUpperCase() : 'K';
-        if (large) {
-            return (
-                <div className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-gray-300 flex items-center justify-center text-black text-6xl md:text-8xl shadow-2xl border-white border-4">
-                    {initials}
-                </div>
-            );
-        }
         return (
-            <div className="w-9 h-9 rounded-full bg-gray-500 flex items-center justify-center text-white font-bold text-sm">
+            <div className={`${large ? 'w-32 h-32 md:w-40 md:h-40 text-6xl md:text-8xl border-4' : 'w-9 h-9 text-sm'} rounded-full bg-gray-500 flex items-center justify-center text-white font-bold shadow-2xl border-white`}>
                 {initials}
             </div>
         );
     };
 
-    if (loading) {
-        return (
-            <div className="min-h-min bg-white flex items-center justify-center">
-                <div className="text-center">
-                    <div className="w-16 h-16 border-4 border-gray-300 border-t-gray-800 rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-gray-800 text-lg">Đang tải kênh...</p>
-                </div>
-            </div>
-        );
-    }
+    // --- RENDER ---
+    if (loading) return <div className="min-h-screen flex justify-center items-center"><div className="animate-spin w-10 h-10 border-4 border-gray-300 border-t-black rounded-full"></div></div>;
+    if (error) return <div className="min-h-screen flex justify-center items-center text-red-600 font-bold">{error}</div>;
 
-    if (error) {
-        return (
-            <div className="min-h-min bg-white flex items-center justify-center text-center px-4">
-                <p className="text-2xl font-bold text-red-600">{error}</p>
-            </div>
-        );
-    }
+    // Logic kiểm tra chủ kênh
+    const currentUserId = currentUser?._id || currentUser?.id;
+    const isOwner = currentUserId && channelData._id && (currentUserId.toString() === channelData._id.toString());
 
     return (
-        <div className="min-h-min bg-white text-gray-900">
-            {/* Banner xám basic */}
+        <div className="min-h-screen bg-white text-gray-900">
+            {/* Banner */}
             <div className="relative h-48 sm:h-64 md:h-80 w-full overflow-hidden bg-gray-300">
                 {channelData.banner ? (
                     <img src={channelData.banner} alt="banner" className="w-full h-full object-cover" />
                 ) : (
-                    <div className="w-full h-full bg-gradient-to-r from-white via-gray-300 to-gray-400" />
+                    <div className="w-full h-full bg-gradient-to-r from-gray-200 to-gray-400" />
                 )}
             </div>
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                {/* Thông tin kênh */}
+                {/* Header Kênh */}
                 <div className="relative -mt-16 md:-mt-20 flex flex-col md:flex-row gap-8 pb-8">
                     <div className="flex items-end gap-6">
-                        <LetterAvatar name={channelData.name} large />
+                        {channelData.avatarUrl ? (
+                            <img 
+                                src={channelData.avatarUrl} 
+                                alt={channelData.name}
+                                className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover shadow-2xl border-white border-4 bg-white"
+                            />
+                        ) : (
+                            <LetterAvatar name={channelData.name} large />
+                        )}
 
                         <div className="pb-3">
                             <div className="flex items-center gap-3 mb-2">
@@ -148,64 +178,41 @@ const ChannelPage = () => {
                                     {channelData.handle} · {formatNumber(channelData.subscribers)} người đăng ký · {videos.length} video
                                 </p>
 
-                                <button
-                                    onClick={() => setIsSubscribed(!isSubscribed)}
-                                    className={`flex items-center gap-2 px-6 py-2.5 rounded-full font-medium transition-all ${isSubscribed
-                                        ? 'bg-gray-300 hover:bg-gray-400 text-gray-800'
-                                        : 'bg-gray-200 hover:bg-gray-300 text-gray-900'
-                                        }`}
-                                >
-                                    {isSubscribed ? (
-                                        <>
-                                            <Bell size={18} />
-                                            Đã đăng ký
-                                        </>
-                                    ) : (
-                                        'Đăng ký'
-                                    )}
-                                </button>
+                                {/* SỬ DỤNG COMPONENT NÚT ĐĂNG KÝ */}
+                                {!isOwner && (
+                                    <SubscribeButton 
+                                        channelId={channelData._id}
+                                        initialIsSubscribed={isSubscribed} // Truyền state chuẩn từ hàm checkUserInteractions
+                                        onToggle={handleSubToggle}
+                                    />
+                                )}
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Tab VIDEO */}
+                {/* Tabs */}
                 <div className="border-b border-gray-300 mb-10">
                     <button className="py-4 px-2 border-b-4 border-blue-600 text-blue-600 font-medium">
                         VIDEO
                     </button>
                 </div>
 
-                {/* Mô tả */}
+                {/* Mô tả & Video Grid */}
                 {channelData.description && (
                     <div className="max-w-4xl mb-10">
-                        <p className={`text-sm text-gray-700 leading-relaxed ${!showMoreDesc ? 'line-clamp-3' : ''}`}>
+                        <p className="text-sm text-gray-700 whitespace-pre-wrap line-clamp-3">
                             {channelData.description}
                         </p>
-                        {channelData.description.length > 200 && (
-                            <button
-                                onClick={() => setShowMoreDesc(!showMoreDesc)}
-                                className="text-sm font-medium text-blue-600 hover:text-blue-800 mt-2"
-                            >
-                                {showMoreDesc ? 'Ẩn bớt' : 'Xem thêm'}
-                            </button>
-                        )}
                     </div>
                 )}
 
-                {/* DANH SÁCH VIDEO – DÙNG VideoCard CHUẨN 100% */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-20">
                     {videos.length === 0 ? (
-                        <div className="col-span-full text-center py-20 text-gray-500 text-lg">
-                            Chưa có video nào được đăng tải.
-                        </div>
+                        <div className="col-span-full text-center py-20 text-gray-500">Chưa có video nào.</div>
                     ) : (
                         videos.map((video) => (
-                            <VideoCard
-                                key={video._id}
-                                video={video}
-                                variant="grid" // Dùng kiểu grid đẹp nhất
-                            />
+                            <VideoCard key={video._id} video={video} variant="grid" />
                         ))
                     )}
                 </div>

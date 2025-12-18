@@ -1,12 +1,16 @@
 import AppRoutes from "./components/AppRoutes/AppRoutes";
 import { AuthProvider } from "./context/AuthContext";
-// import "./styles/main.scss"
+import { Provider as ReduxProvider } from "react-redux";
+
 import "./index.css";
+import { store } from "@/store/store";
 function App() {
   return (
-    <AuthProvider>
-      <AppRoutes />
-    </AuthProvider>
+    <ReduxProvider store={ store }>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
+    </ReduxProvider>
   );
 }
 
