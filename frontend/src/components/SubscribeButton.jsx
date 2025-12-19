@@ -1,62 +1,69 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
-import channelApi from "@/api/channelApi";
+import { 
+  useSubscribeChannelMutation, 
+  useUnsubscribeChannelMutation 
+} from "@/features/videos/videoSlice";
 
 function SubscribeButton({ channelId, initialIsSubscribed, onToggle }) {
   const { isAuthenticated } = useAuth();
+
+  // 1. Khai báo Mutation Hooks
+  const [subscribeChannel, { isLoading: isSubLoading }] = useSubscribeChannelMutation();
+  const [unsubscribeChannel, { isLoading: isUnsubLoading }] = useUnsubscribeChannelMutation();
+
+  // 2. Local State để làm Optimistic UI (Hiển thị ngay lập tức không cần chờ API)
   const [isSubscribed, setIsSubscribed] = useState(initialIsSubscribed);
 
-  // Đồng bộ state khi props từ cha thay đổi (quan trọng khi data load async)
+  // Đồng bộ state khi props từ cha thay đổi (Rất quan trọng khi chuyển video)
   useEffect(() => {
     setIsSubscribed(initialIsSubscribed);
   }, [initialIsSubscribed]);
 
   const handleSubscribe = async (e) => {
-    // Ngăn chặn sự kiện click lan ra ngoài (nếu nút đặt trong thẻ Link)
     e.preventDefault(); 
     e.stopPropagation();
 
     if (!isAuthenticated) return alert("Vui lòng đăng nhập để đăng ký kênh!");
-
-    // 1. Optimistic Update (Cập nhật UI trước)
     const previousState = isSubscribed;
     const newState = !previousState;
     
-    setIsSubscribed(newState);
-    
-    // Gọi callback để báo cho cha biết (để cha tăng/giảm số sub hiển thị)
+    setIsSubscribed(newState); 
+    // Báo cho cha biết để tăng/giảm số lượng sub (nếu cha cần hiển thị số)
     if (onToggle) {
         onToggle(newState); 
     }
-
-    // 2. Gọi API
     try {
       if (!channelId) throw new Error("Thiếu Channel ID");
 
       if (previousState) {
-        // Đang sub -> Hủy sub
-        await channelApi.unsubscribe(channelId);
+        await unsubscribeChannel(channelId).unwrap();
       } else {
-        // Chưa sub -> Đăng ký
-        await channelApi.subscribe(channelId);
+        await subscribeChannel(channelId).unwrap();
       }
+    
     } catch (error) {
-      console.error("Lỗi subscribe:", error);
-      // 3. Revert nếu lỗi
+      console.error("Lỗi thao tác:", error);
+      
+      
       setIsSubscribed(previousState);
-      if (onToggle) onToggle(previousState); // Revert số sub ở cha
-      alert("Thao tác thất bại.");
+      if (onToggle) onToggle(previousState);
+      
+      alert("Thao tác thất bại. Vui lòng thử lại.");
     }
   };
+
+  const isLoading = isSubLoading || isUnsubLoading;
 
   return (
     <Button
       onClick={handleSubscribe}
+      disabled={isLoading} 
       className={`rounded-full h-9 px-4 font-medium text-sm transition-colors ${
         isSubscribed
-          ? "bg-secondary text-foreground hover:bg-secondary/80 border border-border"
-          : "bg-foreground text-background hover:bg-foreground/90"
+          ? "bg-secondary text-foreground hover:bg-secondary/80 border border-border" 
+          : "bg-foreground text-background hover:bg-foreground/90" 
       }`}
     >
       {isSubscribed ? "Đã đăng ký" : "Đăng ký"}

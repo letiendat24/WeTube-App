@@ -75,6 +75,30 @@ export const videosApi = createApi({
         { type: "Videos", id },
       ],
     }),
+
+    getMySubscriptions: build.query({
+      query: () => '/channels/my-subscriptions',
+      providesTags: ['Subscriptions'], 
+    }),
+    
+    subscribeChannel: build.mutation({
+      query: (channelId) => ({
+        url: `/channels/${channelId}/subscribe`,
+        method: 'POST',
+      }),
+      // Bấm xong thì báo hiệu: List Sub ở sidebar cũ rồi (refresh đi) 
+      // và Trạng thái nút bấm ở WatchPage cũ rồi (refresh đi)
+      invalidatesTags: (result, error, id) => ['Subscriptions', { type: 'AuthStatus', id }],
+    }),
+
+    unsubscribeChannel: build.mutation({
+      query: (channelId) => ({
+        url: `/channels/${channelId}/subscribe`,
+        method: 'DELETE',
+      }),
+      // Tương tự: Refresh sidebar và nút bấm
+      invalidatesTags: (result, error, id) => ['Subscriptions', { type: 'AuthStatus', id }],
+    }),
   }),
 });
 
@@ -89,4 +113,7 @@ export const {
   useDislikeVideoMutation,
   useRemoveInteractionMutation,
   useLikeVideoMutation,
+  useGetMySubscriptionsQuery,
+  useSubscribeChannelMutation,
+  useUnsubscribeChannelMutation,
 } = videosApi;

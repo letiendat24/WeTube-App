@@ -1,58 +1,6 @@
-// import { NavLink } from "react-router"
-// import { Home, Clapperboard, PlaySquare, User } from "lucide-react"
-// import { cn } from "@/lib/utils"
-
-// const menuItems = [
-//   { icon: Home, label: "Trang chủ", to: "/" },
-//   { icon: Clapperboard, label: "Shorts", to: "/shorts" },
-//   { icon: PlaySquare, label: "Kênh đăng ký", to: "/subscriptions" },
-//   { icon: User, label: "Bạn", to: "/you" },
-
-// ]
-
-// export default function Sidebar({ className }) {
-//   return (
-//     <aside
-//       className={cn(
-//         "fixed top-0 left-0 z-40 flex flex-col items-center gap-2 w-[72px] h-screen pt-16",
-//         className
-//       )}
-//     >
-//       <nav className="flex flex-col items-center w-full gap-1">
-//         {menuItems.map(({ icon: Icon, label, to }) => (
-//           <NavLink
-//             key={label}
-//             to={to}
-//             end
-//             className={({ isActive }) =>
-//               cn(
-//                 "flex flex-col items-center justify-center w-full py-3 text-[12px] font-medium rounded-xl transition-colors",
-//                 isActive
-//                   ? "text-[var(--accent-color)] bg-[var(--surface-active)]"
-//                   : "text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]"
-//               )
-//             }
-//           >
-//             {({ isActive }) => (
-//               <>
-//                 <Icon
-//                   size={22}
-//                   strokeWidth={isActive ? 2.5 : 2}
-//                   className="mb-1"
-//                 />
-//                 <span>{label}</span>
-//               </>
-//             )}
-//           </NavLink>
-//         ))}
-//       </nav>
-//     </aside>
-//   )
-// }
-// src/components/Sidebar.jsx
-
 import { useEffect, useState } from "react";
 import { NavLink } from "react-router";
+import { useGetMySubscriptionsQuery } from "@/features/videos/videoSlice";
 import {
   Home,
   PlaySquare,
@@ -106,24 +54,26 @@ const renderNavLink = ({ icon: Icon, label, to }) => (
 );
 
 export default function Sidebar() {
-  const [subscriptions, setSubscriptions] = useState([]);
+  // const [subscriptions, setSubscriptions] = useState([]);
 
-  // Tự động tải các kênh (giả lập)
-  useEffect(() => {
-    const fetchChannels = async () => {
-      try {
-        const res = await channelApi.getMySubscriptions();
-        const channels = res.data;
-        console.log(channels);
-        console.log(res);
-        setSubscriptions(channels);
-      } catch (error) {
-        console.error("Lỗi tải kênh:", error);
-      }
-    };
-    fetchChannels();
-  }, []);
-
+  // useEffect(() => {
+  //   const fetchChannels = async () => {
+  //     try {
+  //       const res = await channelApi.getMySubscriptions();
+  //       const channels = res.data;
+  //       console.log(channels);
+  //       console.log(res);
+  //       setSubscriptions(channels);
+  //     } catch (error) {
+  //       console.error("Lỗi tải kênh:", error);
+  //     }
+  //   };
+  //   fetchChannels();
+  // }, []);
+  const { data: subscriptions} = useGetMySubscriptionsQuery();
+  if (!subscriptions) {
+    return;
+  }
   return (
     <nav className="flex flex-col w-full gap-1 p-2">
       {/* PHẦN 1: MENU CHÍNH */}

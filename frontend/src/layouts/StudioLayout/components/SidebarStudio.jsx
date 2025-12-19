@@ -43,7 +43,7 @@ export default function SidebarStudio({ isOpen, onNavigate, className }) {
       {/* PHẦN THÔNG TIN NGƯỜI DÙNG */}
       {/* <div className="p-5 border-b border-gray-200">
         <div className="flex items-center gap-4">
-          <Avatar className="w-12 h-12 ring-4 ring-white shadow-2xl bg-gradient-to-br from-blue-500 to-purple-600">
+          <Avatar className="w-12 h-12 shadow-2xl ring-4 ring-white bg-gradient-to-br from-blue-500 to-purple-600">
             <AvatarImage src={user?.avatarUrl} alt={user?.username} />
             <AvatarFallback className="text-xl font-bold text-white bg-gradient-to-br from-blue-600 to-purple-600">
               {getInitials()}
@@ -51,8 +51,8 @@ export default function SidebarStudio({ isOpen, onNavigate, className }) {
           </Avatar>
 
           {isOpen && (
-            <div className="min-w-0 flex-1">
-              <p className="font-semibold text-gray-900 truncate text-sm">
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-gray-900 truncate">
                 {user?.channelName || user?.username || "Khách"}
               </p>
               <p className="text-xs text-gray-500 truncate">
@@ -66,7 +66,7 @@ export default function SidebarStudio({ isOpen, onNavigate, className }) {
       <div className="p-5 border-b border-gray-200">
         <div className="flex items-center gap-3">
           {/* Avatar đơn giản hơn, bỏ bớt `ring-4` nếu không cần nhấn mạnh */}
-          <Avatar className="w-12 h-12 shadow-md bg-gray-200">
+          <Avatar className="w-12 h-12 bg-gray-200 shadow-md">
             <AvatarImage src={user?.avatarUrl} alt={user?.username} />
             <AvatarFallback className="text-lg font-semibold text-gray-700 bg-gray-100">
               {getInitials()}
@@ -74,13 +74,13 @@ export default function SidebarStudio({ isOpen, onNavigate, className }) {
           </Avatar>
 
           {isOpen && (
-            <div className="min-w-0 flex-1">
+            <div className="flex-1 min-w-0">
               {/* Tên người dùng */}
-              <p className="font-semibold text-gray-800 truncate text-base">
+              <p className="text-base font-semibold text-gray-800 truncate">
                 {user?.channelName || user?.username || "Khách"}
               </p>
               {/* Trạng thái/Email mỏng hơn, màu xám nhạt */}
-              <p className="text-xs text-gray-400 truncate font-light italic">
+              <p className="text-xs italic font-light text-gray-400 truncate">
                 {user?.email || (isAuthenticated ? "Đã đăng nhập" : "Chưa đăng nhập")}
               </p>
             </div>
@@ -94,7 +94,10 @@ export default function SidebarStudio({ isOpen, onNavigate, className }) {
           <NavLink
             key={label}
             to={to}
-            onClick={() => onNavigate?.()}
+            onClick={() => {
+              onNavigate(); // Đóng Modal (nếu đang mở)
+              props.onVideosNavigate(); // ✨ KÍCH HOẠT FETCH VIDEOS TRONG LAYOUT
+            }}
             className={({ isActive }) =>
               cn(
                 "flex items-center gap-4 px-5 py-3 mx-3 rounded-xl text-left transition-all",
