@@ -8,7 +8,7 @@ const getAvatarSrc = (channel) => {
 };
 
 const getChannelName = (channel) => {
-  return channel?.channelName || "Unknown Channel";
+  return channel?.channelName ? channel?.channelName : "Unknown Channel";
 };
 
 // 1. Component con cho kiểu "Grid" (Trang chủ)
@@ -17,7 +17,7 @@ function GridCard({ video }) {
   const videoId = video._id;
   const title = video.title;
   const thumbnail = video.thumbnailUrl;
-  const duration = "10:00"; // Tạm thời hardcode vì DB chưa có trường duration
+  const duration = "10:00"; 
   const views = video.stats?.views || 0;
   const publishedAt = video.createdAt; // Backend dùng createdAt
   
@@ -58,7 +58,7 @@ function GridCard({ video }) {
           <div className="mt-1 text-sm text-muted-foreground">
             <Link
               to={`/channel/${channelId}`}
-              className="hover:text-foreground block"
+              className="block hover:text-foreground"
             >
               {channelName}
             </Link>
@@ -83,12 +83,15 @@ function RowCard({ video }) {
   const title = video.title;
   const description = video.description || "Không có mô tả";
   const thumbnail = video.thumbnailUrl;
-  const views = video.stats?.views || 0;
+  const views = video.stats?.views || video.views;
   const publishedAt = video.createdAt;
 
   const channel = video.channelInfo || video.ownerId;
-  const channelId = channel?._id;
-  const channelName = getChannelName(channel);
+  const channelId = channel?.channelId;
+  let channelName = getChannelName(channel);
+  if (channelName === "Unknown Channel") {
+    channelName = video.channelName;
+  }
   const avatarSrc = getAvatarSrc(channel);
 
   return (
@@ -106,14 +109,14 @@ function RowCard({ video }) {
         </div>
         
         <div className="flex flex-col flex-grow">
-          <h3 className="text-lg font-medium line-clamp-2 text-foreground mb-1">
+          <h3 className="mb-1 text-lg font-medium line-clamp-2 text-foreground">
             {title}
           </h3>
-          <p className="text-xs text-muted-foreground mb-2">
+          <p className="mb-2 text-xs text-muted-foreground">
             {views.toLocaleString()} lượt xem • {formatDateTime(publishedAt)}
           </p>
           
-          <div className="flex items-center gap-2 mb-2 py-2">
+          <div className="flex items-center gap-2 py-2 mb-2">
             <Avatar className="w-6 h-6">
               <AvatarImage src={avatarSrc} />
               <AvatarFallback>{channelName[0]}</AvatarFallback>
@@ -121,7 +124,7 @@ function RowCard({ video }) {
             <p className="text-xs text-muted-foreground hover:text-foreground">{channelName}</p>
           </div>
           
-          <p className="text-xs text-muted-foreground line-clamp-2 hidden sm:block">
+          <p className="hidden text-xs text-muted-foreground line-clamp-2 sm:block">
             {description}
           </p>
         </div>
@@ -155,11 +158,11 @@ function CompactCard({ video }) {
             </span>
         </div>
         
-        <div className="flex flex-col flex-grow min-w-0 pr-6 relative">
-          <h3 className="text-sm font-medium line-clamp-2 text-foreground mb-1 group-hover:text-primary transition-colors">
+        <div className="relative flex flex-col flex-grow min-w-0 pr-6">
+          <h3 className="mb-1 text-sm font-medium transition-colors line-clamp-2 text-foreground group-hover:text-primary">
             {title}
           </h3>
-          <p className="text-xs text-muted-foreground truncate hover:text-foreground">
+          <p className="text-xs truncate text-muted-foreground hover:text-foreground">
             {channelName}
           </p>
           <div className="text-xs text-muted-foreground flex items-center mt-0.5">
