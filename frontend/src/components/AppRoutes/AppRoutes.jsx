@@ -26,6 +26,7 @@ import ChannelPage from "@/pages/ChannelPage";
 import VideoDetails from "@/pages/Studio/components/VideoDetails";
 import VideoList from "@/pages/Studio/components/VideoList";
 import AdminDashboard from "@/pages/Admin/AdminDashboard";
+import Snowfall from "react-snowfall";
 function AppRoutes() {
   // Component bảo vệ route (Chỉ cho phép truy cập nếu đã login)
   const PrivateRoute = () => {
@@ -46,6 +47,7 @@ function AppRoutes() {
   };
   return (
     <Router>
+    <Snowfall color="#82C3D9"/>
       <Routes>
         {/* DefaultLayout */}
         <Route element={<DefaultLayout />}>
