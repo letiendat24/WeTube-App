@@ -4,8 +4,9 @@ import SidebarStudio from "./components/SidebarStudio";
 import VideoDetails from "@/pages/Studio/components/VideoDetails";
 import { useState, useEffect, useCallback } from "react";
 import axios from 'axios';
+import { ENV } from "@/configs/env";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api/videos";
+const API_BASE_URL = `${ENV.apiBaseUrl}/videos`;
 
 export default function StudioLayout() {
   const [isOpen, setIsOpen] = useState(true);

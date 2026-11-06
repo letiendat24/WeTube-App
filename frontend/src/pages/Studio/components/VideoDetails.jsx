@@ -2,9 +2,10 @@ import React, { useState, useRef, useEffect, useMemo, useCallback } from "react"
 import axios from "axios";
 import { Upload, X, CheckCircle, AlertCircle } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { ENV } from "@/configs/env";
 
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000/api/videos";
+const API_BASE = `${ENV.apiBaseUrl}/videos`;
 
 // HELPER: Chuyển chuỗi tags (a, b, c) thành mảng ['a', 'b', 'c']
 const processTags = (tagString) => {

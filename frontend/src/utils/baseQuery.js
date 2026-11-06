@@ -1,7 +1,8 @@
 import { fetchBaseQuery } from "@reduxjs/toolkit/query";
+import { ENV } from "@/configs/env";
 
 const baseQuery = fetchBaseQuery({
-    baseUrl: "http://localhost:3000/api/",
+    baseUrl: `${ENV.apiBaseUrl}/`,
     prepareHeaders: (headers) => {
         const token = localStorage.getItem("token");
         if (token) {

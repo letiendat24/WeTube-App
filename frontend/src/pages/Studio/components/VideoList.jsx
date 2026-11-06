@@ -4,11 +4,12 @@
 import { Video, Globe, Lock, Clock, FileText, Edit3, Trash2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
+import { ENV } from "@/configs/env";
 import axios from "axios";
 // [NEW] Import useOutletContext
 import { useOutletContext } from "react-router-dom";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000/api/videos";
+const API_BASE = `${ENV.apiBaseUrl}/videos`;
 
 const getStatusIcon = (status) => {
     switch (status) {

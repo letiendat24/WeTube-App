@@ -7,7 +7,7 @@ This project simulates the core features of YouTube including **video upload, pl
 
 ## 🚀 Tech Stack
 - **Frontend:** ReactJS
-- **Backend:** Java Spring Boot 
+- **Backend:** NodeJS (https://github.com/letiendat24/backend_wetube)
 - **Database:** MongoDB
 - **Support Service:** NodeJS + WebSocket (chat, notifications)
 - **Others:** REST API
